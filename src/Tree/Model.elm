@@ -1,68 +1,49 @@
-module Tree.Model exposing (Option, Tree(..), TreeNode(..), optionText, questionText, tree)
+module Tree.Model exposing (DecisionTree(..), Option(..), TreeNode(..), tree)
 
 
-type Tree a
-    = Empty
-    | Node a (Tree a) (Tree a)
+type DecisionTree a
+    = Answer AnswerText
+    | Question a
 
 
 type TreeNode
-    = TreeNode Question (List Option)
+    = TreeNode QuestionText Option Option
 
 
-type Question
-    = Colour
-    | IsBanana
-    | IsMelon
+type alias QuestionText =
+    String
+
+
+type alias AnswerText =
+    String
 
 
 type Option
-    = No
-    | Orange
-    | Pink
-    | Yes
+    = Option OptionText (DecisionTree TreeNode)
 
 
-tree : Tree TreeNode
+type alias OptionText =
+    String
+
+
+tree : DecisionTree TreeNode
 tree =
-    Node
-        (TreeNode IsMelon [ Yes, No ])
-        (Node
-            (TreeNode IsBanana [ Yes, No ])
-            Empty
-            Empty
+    Question
+        (TreeNode "Is it a melon?"
+            (Option "yes"
+                (Question
+                    (TreeNode "What colour is it?"
+                        (Option "pink" <| Answer "Watermelon")
+                        (Option "orange" <| Answer "Rockmelon")
+                    )
+                )
+            )
+            (Option "no"
+                (Question
+                    (TreeNode "Is it a banana?"
+                        (Option "yes" <| Answer "Banana")
+                        (Option "no" <| Answer "Mango")
+                    )
+                )
+            )
         )
-        (Node
-            (TreeNode Colour [ Pink, Orange ])
-            Empty
-            Empty
-        )
-
-
-questionText : Question -> String
-questionText q =
-    case q of
-        Colour ->
-            "What colour is it?"
-
-        IsBanana ->
-            "Is it a banana?"
-
-        IsMelon ->
-            "Is it a melon?"
-
-
-optionText : Option -> String
-optionText opt =
-    case opt of
-        No ->
-            "No"
-
-        Orange ->
-            "Orange"
-
-        Pink ->
-            "Pink"
-
-        Yes ->
-            "Yes"

@@ -1,38 +1,39 @@
 module Tree.View exposing (tree)
 
-import Html exposing (Html, div, h2, text)
+import Html exposing (Html, button, div, text)
 import Html.Attributes exposing (class)
 import Messages exposing (Msg)
-import Tree.Model exposing (Option, Tree(..), TreeNode(..), optionText, questionText)
+import Tree.Model exposing (DecisionTree(..), Option(..), TreeNode(..))
 
 
-tree : Tree TreeNode -> Html Msg
-tree treeStructure =
-    case treeStructure of
-        Empty ->
-            div [] []
+tree : DecisionTree TreeNode -> Html Msg
+tree decisionTree =
+    case decisionTree of
+        Answer answerText ->
+            div [ class "has-text-weight-bold answer" ] [ text answerText ]
 
-        Node treeNode childTree1 childTree2 ->
-            div [ class "node" ]
-                [ renderTreeNode treeNode childTree1 childTree2 ]
+        Question treeNode ->
+            renderTreeNode treeNode
 
 
-renderTreeNode : TreeNode -> Tree TreeNode -> Tree TreeNode -> Html Msg
-renderTreeNode (TreeNode question options) childTree1 childTree2 =
-    let
-        renderOption opt =
-            div [ class "option" ]
-                [ div [ class "button" ] [ text <| optionText opt ]
-                , tree childTree1
-                , tree childTree2
-                ]
-    in
+renderTreeNode : TreeNode -> Html Msg
+renderTreeNode (TreeNode questionText option1 option2) =
     div
-        [ class "treenode" ]
-        [ h2
+        [ class "tree-node" ]
+        [ div
             [ class "question" ]
-            [ text <| questionText question ]
-        , div
-            [ class "options" ]
-            (List.map renderOption options)
+            [ text questionText ]
+        , div [ class "options" ]
+            [ renderOption option1
+            , renderOption option2
+            ]
+        ]
+
+
+renderOption : Option -> Html Msg
+renderOption (Option optionText decisionTree) =
+    div
+        [ class "option" ]
+        [ button [ class "button option-name" ] [ text optionText ]
+        , tree decisionTree
         ]

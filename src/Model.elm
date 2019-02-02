@@ -1,11 +1,11 @@
 module Model exposing (Model, init)
 
 import Messages exposing (Msg)
-import Tree.Model exposing (Tree, TreeNode, tree)
+import Tree.Model exposing (DecisionTree, TreeNode, tree)
 
 
 type alias Model =
-    { decisionTree : Tree TreeNode }
+    { decisionTree : DecisionTree TreeNode }
 
 
 init : ( Model, Cmd Msg )
