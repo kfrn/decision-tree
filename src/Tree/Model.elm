@@ -29,20 +29,48 @@ type alias OptionText =
 tree : DecisionTree TreeNode
 tree =
     Question
-        (TreeNode "Is it a melon?"
-            (Option "yes"
+        (TreeNode "What shape is it?"
+            (Option "round(ish)"
                 (Question
-                    (TreeNode "What colour is it?"
-                        (Option "pink" <| Answer "Watermelon")
-                        (Option "orange" <| Answer "Rockmelon")
+                    (TreeNode "Citric or stone fruit?"
+                        (Option "stone fruit"
+                            (Question
+                                (TreeNode "Is it dark-coloured?"
+                                    (Option "yes" <| Answer "plum")
+                                    (Option "no"
+                                        (Question
+                                            (TreeNode "Is it big or small?"
+                                                (Option "big" <| Answer "peach")
+                                                (Option "small" <| Answer "apricot")
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                        (Option "citric" <| Answer "grapefruit")
                     )
                 )
             )
-            (Option "no"
+            (Option "something else"
                 (Question
-                    (TreeNode "Is it a banana?"
-                        (Option "yes" <| Answer "Banana")
-                        (Option "no" <| Answer "Mango")
+                    (TreeNode "Is it a melon?"
+                        (Option "yes"
+                            (Question
+                                (TreeNode "What colour is it?"
+                                    (Option "pink" <| Answer "Watermelon")
+                                    (Option "orange" <| Answer "Rockmelon")
+                                )
+                            )
+                        )
+                        (Option "no"
+                            (Question
+                                (TreeNode "Is it a banana?"
+                                    (Option "yes" <| Answer "Banana")
+                                    (Option "no" <| Answer "Mango")
+                                )
+                            )
+                        )
                     )
                 )
             )
