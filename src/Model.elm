@@ -5,11 +5,13 @@ import Tree.Model exposing (DecisionTree, TreeNode, tree)
 
 
 type alias Model =
-    { decisionTree : DecisionTree TreeNode }
+    { decisionTree : DecisionTree TreeNode
+    , nodes : List (DecisionTree TreeNode)
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { decisionTree = tree }
+    ( { decisionTree = tree, nodes = [ tree ] }
     , Cmd.none
     )
