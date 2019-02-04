@@ -3,7 +3,8 @@ module Update exposing (update)
 import List.Extra as ListX
 import Messages exposing (Msg(..))
 import Model exposing (Model)
-import Tree.Model exposing (DecisionTree(..), Status(..), TreeNode(..))
+import Tree.Data exposing (fullDecisionTree)
+import Tree.Model exposing (DecisionTree(..), TreeNode(..), addChild, findAncestor, isChildOf)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -12,38 +13,26 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        SelectOption tree ->
-            let
-                listHead =
-                    case ListX.init model.nodes of
-                        Just head ->
-                            head
-
-                        Nothing ->
-                            []
-
-                newNodes =
-                    listHead ++ newParentNode tree model.nodes ++ [ tree ]
-            in
-            ( { model | nodes = newNodes }, Cmd.none )
-
-
-newParentNode : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
-newParentNode currentTree existingNodes =
-    case ListX.last existingNodes of
-        Just (Question (TreeNode questionText options)) ->
-            let
-                selectedOption option =
-                    if option.childNode == currentTree then
-                        { option | status = Just Selected }
+        SelectOption currentChoice ->
+            case ListX.last model.choices of
+                Just previousChoice ->
+                    -- Child of the current choice
+                    if isChildOf currentChoice previousChoice then
+                        ( { model | choices = addChild currentChoice model.choices }, Cmd.none )
 
                     else
-                        { option | status = Just Disabled }
+                        -- Ancestor or sibling of the current choice
+                        -- TODO: set correct option to selected, so you don't have to click twice.
+                        case findAncestor currentChoice model.choices of
+                            Just a ->
+                                let
+                                    listHead =
+                                        ListX.takeWhile (\c -> c /= a) model.choices
+                                in
+                                ( { model | choices = listHead ++ [ a ] }, Cmd.none )
 
-                newOptions =
-                    List.map selectedOption options
-            in
-            [ Question (TreeNode questionText newOptions) ]
+                            Nothing ->
+                                ( model, Cmd.none )
 
-        _ ->
-            []
+                Nothing ->
+                    ( { model | choices = [ fullDecisionTree ] }, Cmd.none )

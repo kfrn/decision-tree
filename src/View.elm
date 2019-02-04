@@ -12,5 +12,5 @@ view model =
     div []
         [ h1 [] [ text "Welcome to the fruitbowl" ]
         , div [ id "tree" ]
-            (List.map tree model.nodes)
+            (List.map tree model.choices)
         ]

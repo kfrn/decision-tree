@@ -1,10 +1,10 @@
 module Tree.View exposing (tree)
 
 import Html exposing (Html, button, div, span, text)
-import Html.Attributes exposing (class, classList, disabled)
+import Html.Attributes exposing (class, classList)
 import Html.Events exposing (onClick)
 import Messages exposing (Msg(..))
-import Tree.Model exposing (DecisionTree(..), Option, Status(..), TreeNode(..))
+import Tree.Model exposing (DecisionTree(..), Option, TreeNode(..))
 
 
 tree : DecisionTree TreeNode -> Html Msg
@@ -35,8 +35,7 @@ renderOption option =
     div
         [ class "option" ]
         [ button
-            [ classList [ ( "button option-name", True ), ( "is-primary", option.status == Just Selected ) ]
-            , disabled <| option.status == Just Disabled
+            [ classList [ ( "button option-name", True ), ( "is-primary", option.selected == True ) ]
             , onClick <| SelectOption option.childNode
             ]
             [ text option.name ]

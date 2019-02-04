@@ -1,4 +1,7 @@
-module Tree.Model exposing (DecisionTree(..), Option, Status(..), TreeNode(..), tree)
+module Tree.Model exposing (DecisionTree(..), Option, TreeNode(..), addChild, findAncestor, isChildOf)
+
+import List.Extra as ListX
+import Maybe.Extra as MaybeX
 
 
 type DecisionTree a
@@ -20,108 +23,117 @@ type alias QuestionText =
 
 type alias Option =
     { name : String
-    , status : Maybe Status
+    , selected : Bool
     , childNode : DecisionTree TreeNode
     }
 
 
-type Status
-    = Selected
-    | Disabled
+isChildOf : DecisionTree TreeNode -> DecisionTree TreeNode -> Bool
+isChildOf currentChoice previousChoice =
+    -- TODO: here and elsewhere, matching on questionText. What if the same Q is repeated in different places in the tree? -> Use UUIDs?
+    case ( currentChoice, previousChoice ) of
+        ( Question (TreeNode currentQuestion _), Question previousTreeNode ) ->
+            let
+                (TreeNode _ previousOptions) =
+                    previousTreeNode
+            in
+            MaybeX.isJust <| ListX.find (\opt -> questionText opt.childNode == Just currentQuestion) previousOptions
+
+        ( Answer answerText, Question treeNode ) ->
+            -- TODO - Is this actually a possible case? Check.
+            let
+                (TreeNode _ options) =
+                    treeNode
+            in
+            MaybeX.isJust <| ListX.find (\opt -> opt.childNode == Answer answerText) options
+
+        _ ->
+            -- Previous node can't be an answer.
+            False
 
 
-tree : DecisionTree TreeNode
-tree =
-    Question
-        (TreeNode "Is it an exotic fruit?"
-            [ { name = "no"
-              , status = Nothing
-              , childNode =
-                    Question
-                        (TreeNode "Is it citric or stone fruit?"
-                            [ { name = "citric", status = Nothing, childNode = citricNode }
-                            , { name = "stone fruit", status = Nothing, childNode = stoneFruitNode }
-                            ]
-                        )
-              }
-            , { name = "yes"
-              , status = Nothing
-              , childNode =
-                    Question
-                        (TreeNode "Is it a melon?"
-                            [ { name = "yes", status = Nothing, childNode = melonNode }
-                            , { name = "no", status = Nothing, childNode = bananaNode }
-                            ]
-                        )
-              }
-            ]
-        )
+questionText : DecisionTree TreeNode -> Maybe QuestionText
+questionText decisionTree =
+    case decisionTree of
+        Question (TreeNode text _) ->
+            Just text
+
+        _ ->
+            Nothing
 
 
-citricNode : DecisionTree TreeNode
-citricNode =
-    Question
-        (TreeNode "Green or orange?"
-            [ { name = "green"
-              , status = Nothing
-              , childNode =
-                    Question
-                        (TreeNode "Is it big or small?"
-                            [ { name = "big", status = Nothing, childNode = Answer "grapefruit" }
-                            , { name = "small", status = Nothing, childNode = Answer "lime" }
-                            ]
-                        )
-              }
-            , { name = "orange"
-              , status = Nothing
-              , childNode =
-                    Question
-                        (TreeNode "Is it big or small?"
-                            [ { name = "big", status = Nothing, childNode = Answer "orange" }
-                            , { name = "small", status = Nothing, childNode = Answer "mandarin" }
-                            ]
-                        )
-              }
-            ]
-        )
+addChild : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
+addChild currentChoice existingChoices =
+    listWithoutTail existingChoices ++ updateParent currentChoice existingChoices ++ [ currentChoice ]
 
 
-stoneFruitNode : DecisionTree TreeNode
-stoneFruitNode =
-    Question
-        (TreeNode "Is it dark-coloured?"
-            [ { name = "yes", status = Nothing, childNode = Answer "plum" }
-            , { name = "no"
-              , status = Nothing
-              , childNode =
-                    Question
-                        (TreeNode "Is it big or small?"
-                            [ { name = "big", status = Nothing, childNode = Answer "peach" }
-                            , { name = "small", status = Nothing, childNode = Answer "apricot" }
-                            ]
-                        )
-              }
-            ]
-        )
+listWithoutTail : List a -> List a
+listWithoutTail list =
+    case ListX.init list of
+        Just head ->
+            head
+
+        Nothing ->
+            []
 
 
-melonNode : DecisionTree TreeNode
-melonNode =
-    Question
-        (TreeNode
-            "What colour is it?"
-            [ { name = "pink", status = Nothing, childNode = Answer "watermelon" }
-            , { name = "orange", status = Nothing, childNode = Answer "rockmelon" }
-            , { name = "green", status = Nothing, childNode = Answer "honeydew" }
-            ]
-        )
+updateParent : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
+updateParent currentChoice existingChoices =
+    -- Marks the chosen option as selected on the parent node of the current tree
+    case ListX.last existingChoices of
+        Just (Question (TreeNode qText options)) ->
+            let
+                markSelection option =
+                    if option.childNode == currentChoice then
+                        { option | selected = True }
+
+                    else
+                        { option | selected = False }
+
+                newOptions =
+                    List.map markSelection options
+            in
+            [ Question (TreeNode qText newOptions) ]
+
+        _ ->
+            []
 
 
-bananaNode : DecisionTree TreeNode
-bananaNode =
-    Question
-        (TreeNode "Is it a banana?"
-            [ { name = "yes", status = Nothing, childNode = Answer "banana" }
-            , { name = "no", status = Nothing, childNode = Answer "mango" }
-            ]
-        )
+findAncestor : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> Maybe (DecisionTree TreeNode)
+findAncestor currentChoice existingChoices =
+    case currentChoice of
+        Question (TreeNode currentQuestion _) ->
+            ListX.find (isChildQuestion currentQuestion) existingChoices
+
+        Answer answerText ->
+            ListX.find (isChildOptionText answerText) existingChoices
+
+
+isChildOptionText : String -> DecisionTree TreeNode -> Bool
+isChildOptionText text tree =
+    case tree of
+        Question (TreeNode _ options) ->
+            List.any (\childTree -> treeText childTree == text) (List.map .childNode options)
+
+        _ ->
+            False
+
+
+treeText : DecisionTree TreeNode -> String
+treeText tree =
+    case tree of
+        Answer answerText ->
+            answerText
+
+        Question (TreeNode qText _) ->
+            qText
+
+
+isChildQuestion : QuestionText -> DecisionTree TreeNode -> Bool
+isChildQuestion qText tree =
+    case tree of
+        Question (TreeNode _ options) ->
+            List.any (\childTree -> questionText childTree == Just qText) (List.map .childNode options)
+
+        _ ->
+            False
