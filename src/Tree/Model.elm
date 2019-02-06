@@ -30,36 +30,24 @@ type alias Option =
 
 isChildOf : DecisionTree TreeNode -> DecisionTree TreeNode -> Bool
 isChildOf currentChoice previousChoice =
-    -- TODO: here and elsewhere, matching on questionText. What if the same Q is repeated in different places in the tree? -> Use UUIDs?
-    case ( currentChoice, previousChoice ) of
-        ( Question (TreeNode currentQuestion _), Question previousTreeNode ) ->
-            let
-                (TreeNode _ previousOptions) =
-                    previousTreeNode
-            in
-            MaybeX.isJust <| ListX.find (\opt -> questionText opt.childNode == Just currentQuestion) previousOptions
+    case previousChoice of
+        Question (TreeNode _ previousOptions) ->
+            -- TODO: in isChildOf, matching on the question/answer string - what if the same question is repeated in different parts of the tree?
+            MaybeX.isJust <| ListX.find (\opt -> nodeText opt.childNode == nodeText currentChoice) previousOptions
 
-        ( Answer answerText, Question treeNode ) ->
-            -- TODO - Is this actually a possible case? Check.
-            let
-                (TreeNode _ options) =
-                    treeNode
-            in
-            MaybeX.isJust <| ListX.find (\opt -> opt.childNode == Answer answerText) options
-
-        _ ->
+        Answer _ ->
             -- Previous node can't be an answer.
             False
 
 
-questionText : DecisionTree TreeNode -> Maybe QuestionText
-questionText decisionTree =
-    case decisionTree of
-        Question (TreeNode text _) ->
-            Just text
+nodeText : DecisionTree TreeNode -> String
+nodeText tree =
+    case tree of
+        Answer answerText ->
+            answerText
 
-        _ ->
-            Nothing
+        Question (TreeNode qText _) ->
+            qText
 
 
 addChild : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
@@ -100,40 +88,6 @@ updateParent currentChoice existingChoices =
 
 
 findAncestor : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> Maybe (DecisionTree TreeNode)
-findAncestor currentChoice existingChoices =
-    case currentChoice of
-        Question (TreeNode currentQuestion _) ->
-            ListX.find (isChildQuestion currentQuestion) existingChoices
-
-        Answer answerText ->
-            ListX.find (isChildOptionText answerText) existingChoices
-
-
-isChildOptionText : String -> DecisionTree TreeNode -> Bool
-isChildOptionText text tree =
-    case tree of
-        Question (TreeNode _ options) ->
-            List.any (\childTree -> treeText childTree == text) (List.map .childNode options)
-
-        _ ->
-            False
-
-
-treeText : DecisionTree TreeNode -> String
-treeText tree =
-    case tree of
-        Answer answerText ->
-            answerText
-
-        Question (TreeNode qText _) ->
-            qText
-
-
-isChildQuestion : QuestionText -> DecisionTree TreeNode -> Bool
-isChildQuestion qText tree =
-    case tree of
-        Question (TreeNode _ options) ->
-            List.any (\childTree -> questionText childTree == Just qText) (List.map .childNode options)
-
-        _ ->
-            False
+findAncestor currentChoice previousChoices =
+    -- Find the first choice which includes the current choice in its list of options
+    ListX.find (\tree -> isChildOf currentChoice tree) previousChoices

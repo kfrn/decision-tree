@@ -15,21 +15,22 @@ update msg model =
 
         SelectOption currentChoice ->
             case ListX.last model.choices of
+                -- They shouldn't be in the same path, but still. Use UUIDs?
                 Just previousChoice ->
-                    -- Child of the current choice
                     if isChildOf currentChoice previousChoice then
+                        -- Child of the current choice
                         ( { model | choices = addChild currentChoice model.choices }, Cmd.none )
 
                     else
                         -- Ancestor or sibling of the current choice
                         -- TODO: set correct option to selected, so you don't have to click twice.
                         case findAncestor currentChoice model.choices of
-                            Just a ->
+                            Just ancestor ->
                                 let
                                     listHead =
-                                        ListX.takeWhile (\c -> c /= a) model.choices
+                                        ListX.takeWhile (\c -> c /= ancestor) model.choices
                                 in
-                                ( { model | choices = listHead ++ [ a ] }, Cmd.none )
+                                ( { model | choices = listHead ++ [ ancestor ] }, Cmd.none )
 
                             Nothing ->
                                 ( model, Cmd.none )
