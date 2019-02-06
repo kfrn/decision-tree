@@ -1,4 +1,4 @@
-module Tree.Model exposing (DecisionTree(..), Option, TreeNode(..), addChild, findAncestor, isChildOf)
+module Tree.Model exposing (DecisionTree(..), Option, TreeNode(..), addChild, findAncestor, isChildOf, setSelection)
 
 import List.Extra as ListX
 import Maybe.Extra as MaybeX
@@ -32,7 +32,7 @@ isChildOf : DecisionTree TreeNode -> DecisionTree TreeNode -> Bool
 isChildOf currentChoice previousChoice =
     case previousChoice of
         Question (TreeNode _ previousOptions) ->
-            -- TODO: in isChildOf, matching on the question/answer string - what if the same question is repeated in different parts of the tree?
+            -- TODO: in isChildOf, matching on the question/answer string. Qs should not be repeated in the same path - but use UUIDs?
             MaybeX.isJust <| ListX.find (\opt -> nodeText opt.childNode == nodeText currentChoice) previousOptions
 
         Answer _ ->
@@ -46,8 +46,8 @@ nodeText tree =
         Answer answerText ->
             answerText
 
-        Question (TreeNode qText _) ->
-            qText
+        Question (TreeNode questionText _) ->
+            questionText
 
 
 addChild : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
@@ -57,6 +57,7 @@ addChild currentChoice existingChoices =
 
 listWithoutTail : List a -> List a
 listWithoutTail list =
+    -- TODO: utils module?
     case ListX.init list of
         Just head ->
             head
@@ -69,19 +70,9 @@ updateParent : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (De
 updateParent currentChoice existingChoices =
     -- Marks the chosen option as selected on the parent node of the current tree
     case ListX.last existingChoices of
-        Just (Question (TreeNode qText options)) ->
-            let
-                markSelection option =
-                    if option.childNode == currentChoice then
-                        { option | selected = True }
-
-                    else
-                        { option | selected = False }
-
-                newOptions =
-                    List.map markSelection options
-            in
-            [ Question (TreeNode qText newOptions) ]
+        Just parentChoice ->
+            -- TODO: Maybe.map?
+            [ setSelection parentChoice currentChoice ]
 
         _ ->
             []
@@ -91,3 +82,27 @@ findAncestor : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> Maybe (D
 findAncestor currentChoice previousChoices =
     -- Find the first choice which includes the current choice in its list of options
     ListX.find (\tree -> isChildOf currentChoice tree) previousChoices
+
+
+setSelection : DecisionTree TreeNode -> DecisionTree TreeNode -> DecisionTree TreeNode
+setSelection parentChoice childChoice =
+    case parentChoice of
+        Question (TreeNode questionText options) ->
+            let
+                newOptions =
+                    List.map (\opt -> optionStatus opt childChoice) options
+            in
+            Question (TreeNode questionText newOptions)
+
+        _ ->
+            -- Not possible for an Answer node to have children!
+            parentChoice
+
+
+optionStatus : Option -> DecisionTree TreeNode -> Option
+optionStatus option childTree =
+    if option.childNode == childTree then
+        { option | selected = True }
+
+    else
+        { option | selected = False }

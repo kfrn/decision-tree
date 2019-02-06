@@ -8,6 +8,8 @@ import Tree.Model exposing (DecisionTree, TreeNode)
 type alias Model =
     { decisionTree : DecisionTree TreeNode
     , choices : List (DecisionTree TreeNode)
+
+    -- TODO: choices to be Nonempty List?
     }
 
 
