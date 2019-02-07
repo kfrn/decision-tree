@@ -1,7 +1,7 @@
-module Tree.Model exposing (DecisionTree(..), Option, TreeNode(..), addChild, findAncestor, isChildOf, setSelection)
+module Tree.Model exposing (DecisionTree(..), Option, TreeNode(..), addChild, findAncestor, isChildOf, updateChoices)
 
 import List.Extra as ListX
-import Maybe.Extra as MaybeX
+import Utils exposing (listWithoutLast)
 
 
 type DecisionTree a
@@ -32,11 +32,12 @@ isChildOf : DecisionTree TreeNode -> DecisionTree TreeNode -> Bool
 isChildOf currentChoice previousChoice =
     case previousChoice of
         Question (TreeNode _ previousOptions) ->
-            -- TODO: in isChildOf, matching on the question/answer string. Qs should not be repeated in the same path - but use UUIDs?
-            MaybeX.isJust <| ListX.find (\opt -> nodeText opt.childNode == nodeText currentChoice) previousOptions
+            -- TODO: in isChildOf, matching on the question/answer string. Qs should not be repeated in the same path - but maybe use UUIDs?
+            List.any
+                (\opt -> nodeText opt.childNode == nodeText currentChoice)
+                previousOptions
 
         Answer _ ->
-            -- Previous node can't be an answer.
             False
 
 
@@ -50,59 +51,45 @@ nodeText tree =
             questionText
 
 
-addChild : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
-addChild currentChoice existingChoices =
-    listWithoutTail existingChoices ++ updateParent currentChoice existingChoices ++ [ currentChoice ]
+addChild : DecisionTree TreeNode -> DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
+addChild currentChoice parentChoice existingChoices =
+    listWithoutLast existingChoices
+        ++ [ setSelectionOn parentChoice currentChoice, currentChoice ]
 
 
-listWithoutTail : List a -> List a
-listWithoutTail list =
-    -- TODO: utils module?
-    case ListX.init list of
-        Just head ->
-            head
-
-        Nothing ->
-            []
-
-
-updateParent : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
-updateParent currentChoice existingChoices =
-    -- Marks the chosen option as selected on the parent node of the current tree
-    case ListX.last existingChoices of
-        Just parentChoice ->
-            -- TODO: Maybe.map?
-            [ setSelection parentChoice currentChoice ]
-
-        _ ->
-            []
-
-
-findAncestor : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> Maybe (DecisionTree TreeNode)
-findAncestor currentChoice previousChoices =
-    -- Find the first choice which includes the current choice in its list of options
-    ListX.find (\tree -> isChildOf currentChoice tree) previousChoices
-
-
-setSelection : DecisionTree TreeNode -> DecisionTree TreeNode -> DecisionTree TreeNode
-setSelection parentChoice childChoice =
+setSelectionOn : DecisionTree TreeNode -> DecisionTree TreeNode -> DecisionTree TreeNode
+setSelectionOn parentChoice childChoice =
     case parentChoice of
         Question (TreeNode questionText options) ->
             let
                 newOptions =
-                    List.map (\opt -> optionStatus opt childChoice) options
+                    List.map (\opt -> setOptionStatus opt childChoice) options
             in
             Question (TreeNode questionText newOptions)
 
         _ ->
-            -- Not possible for an Answer node to have children!
             parentChoice
 
 
-optionStatus : Option -> DecisionTree TreeNode -> Option
-optionStatus option childTree =
+setOptionStatus : Option -> DecisionTree TreeNode -> Option
+setOptionStatus option childTree =
     if option.childNode == childTree then
         { option | selected = True }
 
     else
         { option | selected = False }
+
+
+findAncestor : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> Maybe (DecisionTree TreeNode)
+findAncestor currentChoice previousChoices =
+    -- From the list of previous choices, find the first choice which includes the current choice as an option
+    ListX.find (\tree -> isChildOf currentChoice tree) previousChoices
+
+
+updateChoices : DecisionTree TreeNode -> DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
+updateChoices currentChoice parentChoice existingChoices =
+    let
+        listHead =
+            ListX.takeWhile (\c -> c /= parentChoice) existingChoices
+    in
+    listHead ++ [ setSelectionOn parentChoice currentChoice, currentChoice ]

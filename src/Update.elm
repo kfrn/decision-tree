@@ -4,7 +4,7 @@ import List.Extra as ListX
 import Messages exposing (Msg(..))
 import Model exposing (Model)
 import Tree.Data exposing (fullDecisionTree)
-import Tree.Model exposing (DecisionTree(..), TreeNode(..), addChild, findAncestor, isChildOf, setSelection)
+import Tree.Model exposing (DecisionTree(..), TreeNode(..), addChild, findAncestor, isChildOf, updateChoices)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -17,18 +17,17 @@ update msg model =
             case ListX.last model.choices of
                 Just previousChoice ->
                     if isChildOf currentChoice previousChoice then
-                        -- Child of the current choice
-                        ( { model | choices = addChild currentChoice model.choices }, Cmd.none )
+                        ( { model | choices = addChild currentChoice previousChoice model.choices }
+                        , Cmd.none
+                        )
 
                     else
-                        -- Ancestor or sibling of the current choice
+                        -- If ancestor or sibling of the current choice
                         case findAncestor currentChoice model.choices of
                             Just ancestor ->
-                                let
-                                    listHead =
-                                        ListX.takeWhile (\c -> c /= ancestor) model.choices
-                                in
-                                ( { model | choices = listHead ++ [ setSelection ancestor currentChoice, currentChoice ] }, Cmd.none )
+                                ( { model | choices = updateChoices currentChoice ancestor model.choices }
+                                , Cmd.none
+                                )
 
                             Nothing ->
                                 ( model, Cmd.none )
