@@ -5,6 +5,9 @@
   More context in the issue:
     https://github.com/halfzebra/create-elm-app/issues/320
 */
+
+$bulma-blue: #3273dc;
+
 [data-elm-hot="true"] {
   height: inherit;
 }
@@ -16,19 +19,43 @@ body {
   text-align: center;
   color: #293c4b;
   margin: 0 auto;
-  max-width: 50%;
+
+  @media screen and (min-width: 769px) {
+    max-width: 768px;
+  }
 }
 
 h1 {
-  font-size: 30px;
+  color: $bulma-blue;
+  font-family: "Lobster", cursive;
+  font-size: 2.5rem;
+  line-height: 2.5rem;
+  margin: 1.5rem 1.5rem 0.75rem 1.5rem;
 }
 
-.options {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
+#tree {
+  margin-top: 1.5rem;
 
-  .option {
-    margin: 0.5rem 1rem;
+  .tree-node {
+    .question {
+      font-size: 1.25rem;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+
+      margin-bottom: 1rem;
+
+      .option {
+        border: 1px solid $bulma-blue;
+        margin: 0.5rem 1rem;
+      }
+    }
+  }
+
+  .answer {
+    font-size: 1.25rem;
   }
 }

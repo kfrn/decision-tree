@@ -32,11 +32,8 @@ renderTreeNode (TreeNode questionText options) =
 
 renderOption : Option -> Html Msg
 renderOption option =
-    div
-        [ class "option" ]
-        [ button
-            [ classList [ ( "button option-name", True ), ( "is-primary", option.selected == True ) ]
-            , onClick <| SelectOption option.childNode
-            ]
-            [ text option.name ]
+    button
+        [ classList [ ( "button option", True ), ( "is-link", option.selected == True ) ]
+        , onClick <| SelectOption option.childNode
         ]
+        [ text option.name ]
