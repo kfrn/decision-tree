@@ -1,4 +1,4 @@
-module Tree.Model exposing (DecisionTree(..), Option, TreeNode(..), addChild, findAncestor, isChildOf, updateChoices)
+module Tree.Model exposing (DecisionTree(..), Option, TreeNode(..), addChild, findAncestor, isChildOf, setSelectionOn, updateChoices)
 
 import List.Extra as ListX
 import Utils exposing (listWithoutLast)

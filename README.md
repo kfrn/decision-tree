@@ -17,6 +17,12 @@ npm run build-css
 elm-app start
 ```
 
+### Tests
+
+```bash
+elm-app test
+```
+
 <!-- To deploy to github pages:
 ```
 elm-app build
