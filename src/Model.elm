@@ -6,13 +6,11 @@ import Tree.Model exposing (DecisionTree, TreeNode)
 
 
 type alias Model =
-    { decisionTree : DecisionTree TreeNode
-    , choices : List (DecisionTree TreeNode)
-    }
+    List (DecisionTree TreeNode)
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { decisionTree = fullDecisionTree, choices = [ fullDecisionTree ] }
+    ( [ fullDecisionTree ]
     , Cmd.none
     )

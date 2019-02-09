@@ -3,7 +3,6 @@ module Tests exposing (all)
 import Expect
 import Messages exposing (Msg(..))
 import Test exposing (..)
-import Tree.Data exposing (fullDecisionTree)
 import Tree.Model exposing (DecisionTree(..), TreeNode(..), findAncestor, isChildOf, setSelectionOn)
 import Update exposing (update)
 
@@ -91,10 +90,10 @@ all =
                 [ test "the child tree is stored as a choice, and the parent tree is selected" <|
                     let
                         initialModel =
-                            { decisionTree = fullDecisionTree, choices = [ parentTree ] }
+                            [ parentTree ]
 
                         expectedModel =
-                            { decisionTree = fullDecisionTree, choices = [ parentTreeSelected, childTree ] }
+                            [ parentTreeSelected, childTree ]
                     in
                     \_ -> Expect.equal ( expectedModel, Cmd.none ) (update (SelectOption childTree) initialModel)
                 ]
@@ -102,10 +101,10 @@ all =
                 [ test "the tree is 'reset' to the current choice, with the parent of that ancestor set to selected" <|
                     let
                         initialModel =
-                            { decisionTree = fullDecisionTree, choices = [ grandparentTree, parentTree, childTree ] }
+                            [ grandparentTree, parentTree, childTree ]
 
                         expectedModel =
-                            { decisionTree = fullDecisionTree, choices = [ grandparentTreeSelected, parentTree ] }
+                            [ grandparentTreeSelected, parentTree ]
                     in
                     \_ -> Expect.equal ( expectedModel, Cmd.none ) (update (SelectOption parentTree) initialModel)
                 ]

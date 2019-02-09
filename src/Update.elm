@@ -14,23 +14,19 @@ update msg model =
             ( model, Cmd.none )
 
         SelectOption currentChoice ->
-            case ListX.last model.choices of
+            case ListX.last model of
                 Just previousChoice ->
                     if isChildOf currentChoice previousChoice then
-                        ( { model | choices = addChild currentChoice previousChoice model.choices }
-                        , Cmd.none
-                        )
+                        ( addChild currentChoice previousChoice model, Cmd.none )
 
                     else
                         -- If ancestor or sibling of the current choice
-                        case findAncestor currentChoice model.choices of
+                        case findAncestor currentChoice model of
                             Just ancestor ->
-                                ( { model | choices = updateChoices currentChoice ancestor model.choices }
-                                , Cmd.none
-                                )
+                                ( updateChoices currentChoice ancestor model, Cmd.none )
 
                             Nothing ->
                                 ( model, Cmd.none )
 
                 Nothing ->
-                    ( { model | choices = [ fullDecisionTree ] }, Cmd.none )
+                    ( [ fullDecisionTree ], Cmd.none )
