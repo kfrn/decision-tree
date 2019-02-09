@@ -1,4 +1,6 @@
-module Tree.Model exposing (DecisionTree(..), Option(..), TreeNode(..), tree)
+module Tree.Model exposing (DecisionTree(..), Option, TreeNode(..), findClosestAncestor, setSelectionOn, updateChoices)
+
+import List.Extra as ListX
 
 
 type DecisionTree a
@@ -7,71 +9,79 @@ type DecisionTree a
 
 
 type TreeNode
-    = TreeNode QuestionText Option Option
-
-
-type alias QuestionText =
-    String
+    = TreeNode QuestionText (List Option)
 
 
 type alias AnswerText =
     String
 
 
-type Option
-    = Option OptionText (DecisionTree TreeNode)
-
-
-type alias OptionText =
+type alias QuestionText =
     String
 
 
-tree : DecisionTree TreeNode
-tree =
-    Question
-        (TreeNode "What shape is it?"
-            (Option "round(ish)"
-                (Question
-                    (TreeNode "Citric or stone fruit?"
-                        (Option "stone fruit"
-                            (Question
-                                (TreeNode "Is it dark-coloured?"
-                                    (Option "yes" <| Answer "plum")
-                                    (Option "no"
-                                        (Question
-                                            (TreeNode "Is it big or small?"
-                                                (Option "big" <| Answer "peach")
-                                                (Option "small" <| Answer "apricot")
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                        (Option "citric" <| Answer "grapefruit")
-                    )
-                )
-            )
-            (Option "something else"
-                (Question
-                    (TreeNode "Is it a melon?"
-                        (Option "yes"
-                            (Question
-                                (TreeNode "What colour is it?"
-                                    (Option "pink" <| Answer "Watermelon")
-                                    (Option "orange" <| Answer "Rockmelon")
-                                )
-                            )
-                        )
-                        (Option "no"
-                            (Question
-                                (TreeNode "Is it a banana?"
-                                    (Option "yes" <| Answer "Banana")
-                                    (Option "no" <| Answer "Mango")
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        )
+type alias Option =
+    { name : String
+    , selected : Bool
+    , childNode : DecisionTree TreeNode
+    }
+
+
+findClosestAncestor : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> Maybe (DecisionTree TreeNode)
+findClosestAncestor currentChoice previousChoices =
+    ListX.find (\tree -> isChildOf currentChoice tree) (List.reverse previousChoices)
+
+
+isChildOf : DecisionTree TreeNode -> DecisionTree TreeNode -> Bool
+isChildOf currentChoice previousChoice =
+    case previousChoice of
+        Question (TreeNode _ previousOptions) ->
+            -- TODO: in isChildOf, matching on the question/answer string. Qs should not be repeated in the same path - but maybe use UUIDs?
+            List.any
+                (\opt -> nodeText opt.childNode == nodeText currentChoice)
+                previousOptions
+
+        Answer _ ->
+            False
+
+
+nodeText : DecisionTree TreeNode -> String
+nodeText tree =
+    case tree of
+        Answer answerText ->
+            answerText
+
+        Question (TreeNode questionText _) ->
+            questionText
+
+
+updateChoices : DecisionTree TreeNode -> DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
+updateChoices currentChoice parentChoice existingChoices =
+    let
+        listHead =
+            ListX.takeWhile (\c -> c /= parentChoice) existingChoices
+    in
+    listHead ++ [ setSelectionOn parentChoice currentChoice, currentChoice ]
+
+
+setSelectionOn : DecisionTree TreeNode -> DecisionTree TreeNode -> DecisionTree TreeNode
+setSelectionOn parentChoice childChoice =
+    case parentChoice of
+        Question (TreeNode questionText options) ->
+            let
+                newOptions =
+                    List.map (\opt -> setOptionStatus opt childChoice) options
+            in
+            Question (TreeNode questionText newOptions)
+
+        _ ->
+            parentChoice
+
+
+setOptionStatus : Option -> DecisionTree TreeNode -> Option
+setOptionStatus option childTree =
+    if option.childNode == childTree then
+        { option | selected = True }
+
+    else
+        { option | selected = False }
