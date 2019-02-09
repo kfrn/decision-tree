@@ -1,7 +1,6 @@
-module Tree.Model exposing (DecisionTree(..), Option, TreeNode(..), addChild, findAncestor, isChildOf, setSelectionOn, updateChoices)
+module Tree.Model exposing (DecisionTree(..), Option, TreeNode(..), findClosestAncestor, setSelectionOn, updateChoices)
 
 import List.Extra as ListX
-import Utils exposing (listWithoutLast)
 
 
 type DecisionTree a
@@ -28,6 +27,11 @@ type alias Option =
     }
 
 
+findClosestAncestor : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> Maybe (DecisionTree TreeNode)
+findClosestAncestor currentChoice previousChoices =
+    ListX.find (\tree -> isChildOf currentChoice tree) (List.reverse previousChoices)
+
+
 isChildOf : DecisionTree TreeNode -> DecisionTree TreeNode -> Bool
 isChildOf currentChoice previousChoice =
     case previousChoice of
@@ -51,10 +55,13 @@ nodeText tree =
             questionText
 
 
-addChild : DecisionTree TreeNode -> DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
-addChild currentChoice parentChoice existingChoices =
-    listWithoutLast existingChoices
-        ++ [ setSelectionOn parentChoice currentChoice, currentChoice ]
+updateChoices : DecisionTree TreeNode -> DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
+updateChoices currentChoice parentChoice existingChoices =
+    let
+        listHead =
+            ListX.takeWhile (\c -> c /= parentChoice) existingChoices
+    in
+    listHead ++ [ setSelectionOn parentChoice currentChoice, currentChoice ]
 
 
 setSelectionOn : DecisionTree TreeNode -> DecisionTree TreeNode -> DecisionTree TreeNode
@@ -78,18 +85,3 @@ setOptionStatus option childTree =
 
     else
         { option | selected = False }
-
-
-findAncestor : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> Maybe (DecisionTree TreeNode)
-findAncestor currentChoice previousChoices =
-    -- From the list of previous choices, find the first choice which includes the current choice as an option
-    ListX.find (\tree -> isChildOf currentChoice tree) previousChoices
-
-
-updateChoices : DecisionTree TreeNode -> DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
-updateChoices currentChoice parentChoice existingChoices =
-    let
-        listHead =
-            ListX.takeWhile (\c -> c /= parentChoice) existingChoices
-    in
-    listHead ++ [ setSelectionOn parentChoice currentChoice, currentChoice ]
