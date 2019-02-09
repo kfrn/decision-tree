@@ -1,6 +1,6 @@
 module View exposing (view)
 
-import Html exposing (Html, a, code, div, footer, h1, text)
+import Html exposing (Html, a, code, div, h1, text)
 import Html.Attributes exposing (href, id)
 import Messages exposing (Msg)
 import Model exposing (Model)

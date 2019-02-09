@@ -1,7 +1,7 @@
 module Tree.View exposing (tree)
 
-import Html exposing (Html, button, div, span, text)
-import Html.Attributes exposing (class, classList)
+import Html exposing (Html, button, div, img, text)
+import Html.Attributes exposing (class, classList, src)
 import Html.Events exposing (onClick)
 import Messages exposing (Msg(..))
 import Tree.Model exposing (DecisionTree(..), Option, TreeNode(..))
@@ -11,9 +11,14 @@ tree : DecisionTree TreeNode -> Html Msg
 tree decisionTree =
     case decisionTree of
         Answer answerText ->
+            let
+                imageUrl =
+                    "%PUBLIC_URL%/images/" ++ answerText ++ ".jpg"
+            in
             div [ class "answer" ]
-                [ span [] [ text "Answer is: " ]
-                , span [ class "has-text-weight-bold" ] [ text answerText ]
+                [ div [] [ text "The answer is:" ]
+                , img [ src imageUrl ] []
+                , div [ class "has-text-weight-bold answer-name" ] [ text answerText ]
                 ]
 
         Question treeNode ->
