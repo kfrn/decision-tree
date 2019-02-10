@@ -29,3 +29,7 @@ elm-app build
 gh-pages -d build
 ```
 -->
+
+#### Credits
+
+Curved arrow by Star and Anchor Design from the Noun Project.

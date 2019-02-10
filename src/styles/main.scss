@@ -34,10 +34,10 @@ h1 {
 }
 
 #tree {
-  margin-top: 1.5rem;
+  margin: 1.5rem 0;
 
   .tree-node {
-    &:not(:first-child) {
+    &:not(:first-of-type) {
       -webkit-animation: fadein 0.8s; /* Safari, Chrome and Opera > 12.1 */
       -moz-animation: fadein 0.8s; /* Firefox < 16 */
       -ms-animation: fadein 0.8s; /* Internet Explorer */
@@ -54,10 +54,21 @@ h1 {
       flex-direction: row;
       justify-content: center;
 
-      margin-bottom: 1rem;
-
       .option {
         margin: 0.5rem 1rem;
+
+        .arrow {
+          -webkit-animation: fadein 0.5s; /* Safari, Chrome and Opera > 12.1 */
+          -moz-animation: fadein 0.5s; /* Firefox < 16 */
+          -ms-animation: fadein 0.5s; /* Internet Explorer */
+          -o-animation: fadein 0.5s; /* Opera < 12.1 */
+          animation: fadein 0.5s;
+
+          img {
+            margin-top: 0.75rem;
+            height: 2.5rem;
+          }
+        }
       }
     }
   }
@@ -65,15 +76,15 @@ h1 {
   .answer {
     border: 1px solid $bulma-blue;
     border-radius: 0.5rem;
-    margin: 2rem auto 1rem;
+    margin: 0 auto 1rem;
     padding: 0.5rem;
     width: 10rem;
 
-    -webkit-animation: fadein 0.8s; /* Safari, Chrome and Opera > 12.1 */
-    -moz-animation: fadein 0.8s; /* Firefox < 16 */
-    -ms-animation: fadein 0.8s; /* Internet Explorer */
-    -o-animation: fadein 0.8s; /* Opera < 12.1 */
-    animation: fadein 0.8s;
+    -webkit-animation: fadein 0.9s; /* Safari, Chrome and Opera > 12.1 */
+    -moz-animation: fadein 0.9s; /* Firefox < 16 */
+    -ms-animation: fadein 0.9s; /* Internet Explorer */
+    -o-animation: fadein 0.9s; /* Opera < 12.1 */
+    animation: fadein 0.9s;
 
     img {
       height: 5rem;
