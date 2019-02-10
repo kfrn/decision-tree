@@ -6,3 +6,4 @@ import Tree.Model exposing (DecisionTree, TreeNode)
 type Msg
     = NoOp
     | SelectOption (DecisionTree TreeNode)
+    | Reset

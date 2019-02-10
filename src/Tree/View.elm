@@ -11,10 +11,13 @@ tree : DecisionTree TreeNode -> Html Msg
 tree decisionTree =
     case decisionTree of
         Answer answerText ->
-            div [ class "answer" ]
-                [ div [] [ text "The answer is:" ]
-                , img [ src <| imageUrl answerText "jpg" ] []
-                , div [ class "has-text-weight-bold answer-name" ] [ text answerText ]
+            div []
+                [ div [ class "answer" ]
+                    [ div [] [ text "The answer is:" ]
+                    , img [ src <| imageUrl answerText "jpg" ] []
+                    , div [ class "has-text-weight-bold answer-name" ] [ text answerText ]
+                    ]
+                , button [ class "button is-link reset", onClick Reset ] [ text "Reset!" ]
                 ]
 
         Question treeNode ->

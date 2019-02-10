@@ -19,3 +19,6 @@ update msg model =
 
                 Nothing ->
                     ( [ fullDecisionTree ], Cmd.none )
+
+        Reset ->
+            ( [ fullDecisionTree ], Cmd.none )
