@@ -12,6 +12,7 @@ See it live [here](https://kfrn.github.io/decision-tree)!
 
 * [Elm `0.19`](https://guide.elm-lang.org/install.html)
 * [`create-elm-app`](https://github.com/halfzebra/create-elm-app)
+* Node.js and `npm`
 
 #### To run locally
 
