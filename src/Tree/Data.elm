@@ -1,17 +1,17 @@
-module Tree.Data exposing (fullDecisionTree)
+module Tree.Data exposing (fullTree)
 
-import Tree.Model exposing (DecisionTree(..), TreeNode(..))
+import Tree.Model exposing (Node(..), Tree(..))
 
 
-fullDecisionTree : DecisionTree TreeNode
-fullDecisionTree =
+fullTree : Tree Node
+fullTree =
     Question
-        (TreeNode "Is it an exotic fruit?"
+        (Node "Is it an exotic fruit?"
             [ { name = "no"
               , selected = False
               , childNode =
                     Question
-                        (TreeNode "Is it citric or stone fruit?"
+                        (Node "Is it citric or stone fruit?"
                             [ { name = "citric", selected = False, childNode = citricNode }
                             , { name = "stone fruit", selected = False, childNode = stoneFruitNode }
                             ]
@@ -21,7 +21,7 @@ fullDecisionTree =
               , selected = False
               , childNode =
                     Question
-                        (TreeNode "Is it a melon?"
+                        (Node "Is it a melon?"
                             [ { name = "yes", selected = False, childNode = melonNode }
                             , { name = "no", selected = False, childNode = bananaNode }
                             ]
@@ -31,15 +31,15 @@ fullDecisionTree =
         )
 
 
-citricNode : DecisionTree TreeNode
+citricNode : Tree Node
 citricNode =
     Question
-        (TreeNode "Green or orange?"
+        (Node "Green or orange?"
             [ { name = "green"
               , selected = False
               , childNode =
                     Question
-                        (TreeNode "Is it big or small?"
+                        (Node "Is it big or small?"
                             [ { name = "big", selected = False, childNode = Answer "grapefruit" }
                             , { name = "small", selected = False, childNode = Answer "lime" }
                             ]
@@ -49,7 +49,7 @@ citricNode =
               , selected = False
               , childNode =
                     Question
-                        (TreeNode "Is it big or small?"
+                        (Node "Is it big or small?"
                             [ { name = "big", selected = False, childNode = Answer "orange" }
                             , { name = "small", selected = False, childNode = Answer "mandarin" }
                             ]
@@ -59,16 +59,16 @@ citricNode =
         )
 
 
-stoneFruitNode : DecisionTree TreeNode
+stoneFruitNode : Tree Node
 stoneFruitNode =
     Question
-        (TreeNode "Is it dark-coloured?"
+        (Node "Is it dark-coloured?"
             [ { name = "yes", selected = False, childNode = Answer "plum" }
             , { name = "no"
               , selected = False
               , childNode =
                     Question
-                        (TreeNode "Is it big or small?"
+                        (Node "Is it big or small?"
                             [ { name = "big", selected = False, childNode = Answer "peach" }
                             , { name = "small", selected = False, childNode = Answer "apricot" }
                             ]
@@ -78,10 +78,10 @@ stoneFruitNode =
         )
 
 
-melonNode : DecisionTree TreeNode
+melonNode : Tree Node
 melonNode =
     Question
-        (TreeNode
+        (Node
             "What colour is it?"
             [ { name = "pink", selected = False, childNode = Answer "watermelon" }
             , { name = "orange", selected = False, childNode = Answer "rockmelon" }
@@ -90,10 +90,10 @@ melonNode =
         )
 
 
-bananaNode : DecisionTree TreeNode
+bananaNode : Tree Node
 bananaNode =
     Question
-        (TreeNode "Is it a banana?"
+        (Node "Is it a banana?"
             [ { name = "yes", selected = False, childNode = Answer "banana" }
             , { name = "no", selected = False, childNode = Answer "mango" }
             ]

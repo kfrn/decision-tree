@@ -4,10 +4,10 @@ import Html exposing (Html, button, div, img, text)
 import Html.Attributes exposing (class, classList, src)
 import Html.Events exposing (onClick)
 import Messages exposing (Msg(..))
-import Tree.Model exposing (DecisionTree(..), Option, TreeNode(..))
+import Tree.Model exposing (Tree(..), Option, Node(..))
 
 
-tree : DecisionTree TreeNode -> Html Msg
+tree : Tree Node -> Html Msg
 tree decisionTree =
     case decisionTree of
         Answer answerText ->
@@ -20,8 +20,8 @@ tree decisionTree =
                 , button [ class "button is-link reset", onClick Reset ] [ text "Reset!" ]
                 ]
 
-        Question treeNode ->
-            renderTreeNode treeNode
+        Question node ->
+            renderNode node
 
 
 imageUrl : String -> String -> String
@@ -29,8 +29,8 @@ imageUrl name extension =
     "%PUBLIC_URL%/images/" ++ name ++ "." ++ extension
 
 
-renderTreeNode : TreeNode -> Html Msg
-renderTreeNode (TreeNode questionText options) =
+renderNode : Node -> Html Msg
+renderNode (Node questionText options) =
     div
         [ class "tree-node" ]
         [ div [ class "question" ] [ text questionText ]

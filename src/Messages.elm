@@ -1,9 +1,9 @@
 module Messages exposing (Msg(..))
 
-import Tree.Model exposing (DecisionTree, TreeNode)
+import Tree.Model exposing (Tree, Node)
 
 
 type Msg
     = NoOp
-    | SelectOption (DecisionTree TreeNode)
+    | SelectOption (Tree Node)
     | Reset

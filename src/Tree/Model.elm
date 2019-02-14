@@ -1,15 +1,15 @@
-module Tree.Model exposing (DecisionTree(..), Option, TreeNode(..), findClosestAncestor, setSelectionOn, updateChoices)
+module Tree.Model exposing (Node(..), Option, Tree(..), findClosestAncestor, setSelectionOn, updateChoices)
 
 import List.Extra as ListX
 
 
-type DecisionTree a
+type Tree a
     = Answer AnswerText
     | Question a
 
 
-type TreeNode
-    = TreeNode QuestionText (List Option)
+type Node
+    = Node QuestionText (List Option)
 
 
 type alias AnswerText =
@@ -23,19 +23,19 @@ type alias QuestionText =
 type alias Option =
     { name : String
     , selected : Bool
-    , childNode : DecisionTree TreeNode
+    , childNode : Tree Node
     }
 
 
-findClosestAncestor : DecisionTree TreeNode -> List (DecisionTree TreeNode) -> Maybe (DecisionTree TreeNode)
+findClosestAncestor : Tree Node -> List (Tree Node) -> Maybe (Tree Node)
 findClosestAncestor currentChoice previousChoices =
     ListX.find (\tree -> isChildOf currentChoice tree) (List.reverse previousChoices)
 
 
-isChildOf : DecisionTree TreeNode -> DecisionTree TreeNode -> Bool
+isChildOf : Tree Node -> Tree Node -> Bool
 isChildOf currentChoice previousChoice =
     case previousChoice of
-        Question (TreeNode _ previousOptions) ->
+        Question (Node _ previousOptions) ->
             -- TODO: in isChildOf, matching on the question/answer string. Qs should not be repeated in the same path - but maybe use UUIDs?
             List.any
                 (\opt -> nodeText opt.childNode == nodeText currentChoice)
@@ -45,17 +45,17 @@ isChildOf currentChoice previousChoice =
             False
 
 
-nodeText : DecisionTree TreeNode -> String
+nodeText : Tree Node -> String
 nodeText tree =
     case tree of
         Answer answerText ->
             answerText
 
-        Question (TreeNode questionText _) ->
+        Question (Node questionText _) ->
             questionText
 
 
-updateChoices : DecisionTree TreeNode -> DecisionTree TreeNode -> List (DecisionTree TreeNode) -> List (DecisionTree TreeNode)
+updateChoices : Tree Node -> Tree Node -> List (Tree Node) -> List (Tree Node)
 updateChoices currentChoice parentChoice existingChoices =
     let
         listHead =
@@ -64,21 +64,21 @@ updateChoices currentChoice parentChoice existingChoices =
     listHead ++ [ setSelectionOn parentChoice currentChoice, currentChoice ]
 
 
-setSelectionOn : DecisionTree TreeNode -> DecisionTree TreeNode -> DecisionTree TreeNode
+setSelectionOn : Tree Node -> Tree Node -> Tree Node
 setSelectionOn parentChoice childChoice =
     case parentChoice of
-        Question (TreeNode questionText options) ->
+        Question (Node questionText options) ->
             let
                 newOptions =
                     List.map (\opt -> setOptionStatus opt childChoice) options
             in
-            Question (TreeNode questionText newOptions)
+            Question (Node questionText newOptions)
 
         _ ->
             parentChoice
 
 
-setOptionStatus : Option -> DecisionTree TreeNode -> Option
+setOptionStatus : Option -> Tree Node -> Option
 setOptionStatus option childTree =
     if option.childNode == childTree then
         { option | selected = True }

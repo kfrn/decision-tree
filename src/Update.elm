@@ -4,8 +4,8 @@ import Browser.Dom as Dom
 import Messages exposing (Msg(..))
 import Model exposing (Model)
 import Task
-import Tree.Data exposing (fullDecisionTree)
-import Tree.Model exposing (DecisionTree(..), TreeNode(..), findClosestAncestor, updateChoices)
+import Tree.Data exposing (fullTree)
+import Tree.Model exposing (Node(..), Tree(..), findClosestAncestor, updateChoices)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -22,10 +22,10 @@ update msg model =
                     )
 
                 Nothing ->
-                    ( [ fullDecisionTree ], Cmd.none )
+                    ( [ fullTree ], Cmd.none )
 
         Reset ->
-            ( [ fullDecisionTree ], Cmd.none )
+            ( [ fullTree ], Cmd.none )
 
 
 jumpToBottom : String -> Cmd Msg

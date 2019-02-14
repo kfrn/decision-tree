@@ -3,7 +3,7 @@ module Tests exposing (all)
 import Expect
 import Messages exposing (Msg(..))
 import Test exposing (..)
-import Tree.Model exposing (DecisionTree(..), TreeNode(..), findClosestAncestor, setSelectionOn)
+import Tree.Model exposing (Tree(..), Node(..), findClosestAncestor, setSelectionOn)
 import Update exposing (update)
 
 
@@ -15,14 +15,14 @@ all =
                 Answer "child answer"
 
             parentTree =
-                Question (TreeNode "parent question text" [ { name = "parent option", selected = False, childNode = childTree } ])
+                Question (Node "parent question text" [ { name = "parent option", selected = False, childNode = childTree } ])
 
             parentTreeSelected =
-                Question (TreeNode "parent question text" [ { name = "parent option", selected = True, childNode = childTree } ])
+                Question (Node "parent question text" [ { name = "parent option", selected = True, childNode = childTree } ])
 
             grandparentTree =
                 Question
-                    (TreeNode "question text"
+                    (Node "question text"
                         [ { name = "option"
                           , selected = False
                           , childNode = parentTree
@@ -32,7 +32,7 @@ all =
 
             grandparentTreeSelected =
                 Question
-                    (TreeNode "question text"
+                    (Node "question text"
                         [ { name = "option"
                           , selected = True
                           , childNode = parentTree

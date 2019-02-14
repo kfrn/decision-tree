@@ -1,16 +1,16 @@
 module Model exposing (Model, init)
 
 import Messages exposing (Msg)
-import Tree.Data exposing (fullDecisionTree)
-import Tree.Model exposing (DecisionTree, TreeNode)
+import Tree.Data exposing (fullTree)
+import Tree.Model exposing (Node, Tree)
 
 
 type alias Model =
-    List (DecisionTree TreeNode)
+    List (Tree Node)
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( [ fullDecisionTree ]
+    ( [ fullTree ]
     , Cmd.none
     )
