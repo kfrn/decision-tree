@@ -5,14 +5,19 @@ import Html.Attributes exposing (href, id)
 import Html.Events exposing (onClick)
 import Messages exposing (Msg(..))
 import Model exposing (Model)
-import Tree.View exposing (tree)
+import Tree.View exposing (renderTree)
+import Utils exposing (getNext)
 
 
 view : Model -> Html Msg
 view model =
+    let
+        renderNodes tree =
+            renderTree tree (getNext tree model)
+    in
     div []
         [ h1 [ onClick Reset ] [ text "what fruit does the decision tree hold?" ]
         , a [ href "https://github.com/kfrn/decision-tree" ] [ code [] [ text "(source code!)" ] ]
         , div [ id "tree" ]
-            (List.map tree model)
+            (List.map renderNodes model)
         ]

@@ -2,11 +2,11 @@ module Model exposing (Model, init)
 
 import Messages exposing (Msg)
 import Tree.Data exposing (fullTree)
-import Tree.Model exposing (Node, Tree)
+import Tree.Model exposing (Tree)
 
 
 type alias Model =
-    List (Tree Node)
+    List Tree
 
 
 init : ( Model, Cmd Msg )

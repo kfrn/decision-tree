@@ -1,49 +1,45 @@
-module Tree.View exposing (tree)
+module Tree.View exposing (renderTree)
 
 import Html exposing (Html, button, div, img, text)
 import Html.Attributes exposing (class, classList, src)
 import Html.Events exposing (onClick)
 import Messages exposing (Msg(..))
-import Tree.Model exposing (Tree(..), Option, Node(..))
+import Tree.Model exposing (Answer, Option(..), Question, Tree(..))
 
 
-tree : Tree Node -> Html Msg
-tree decisionTree =
-    case decisionTree of
-        Answer answerText ->
-            div []
-                [ div [ class "answer" ]
-                    [ div [] [ text "The answer is:" ]
-                    , img [ src <| imageUrl answerText "jpg" ] []
-                    , div [ class "has-text-weight-bold answer-name" ] [ text answerText ]
-                    ]
-                , button [ class "button is-link reset", onClick Reset ] [ text "Reset!" ]
-                ]
+renderTree : Tree -> Maybe Tree -> Html Msg
+renderTree tree mChildTree =
+    case tree of
+        Branch question options ->
+            renderBranch question options mChildTree
 
-        Question node ->
-            renderNode node
+        Leaf answer ->
+            renderLeaf answer
 
 
-imageUrl : String -> String -> String
-imageUrl name extension =
-    "%PUBLIC_URL%/images/" ++ name ++ "." ++ extension
-
-
-renderNode : Node -> Html Msg
-renderNode (Node questionText options) =
+renderBranch : Question -> List Option -> Maybe Tree -> Html Msg
+renderBranch question options mChildTree =
     div
-        [ class "tree-node" ]
-        [ div [ class "question" ] [ text questionText ]
+        [ class "branch" ]
+        [ div [ class "question" ] [ text question ]
         , div [ class "options" ]
-            (List.map (renderOption (List.length options)) (List.indexedMap Tuple.pair options))
+            (List.map (renderOption (List.length options) mChildTree) (List.indexedMap Tuple.pair options))
         ]
 
 
-renderOption : Int -> ( Int, Option ) -> Html Msg
-renderOption optionsCount ( idx, option ) =
+renderOption : Int -> Maybe Tree -> ( Int, Option ) -> Html Msg
+renderOption optionsCount mChildTree ( idx, Option answer childTree ) =
     let
+        optionSelected =
+            case mChildTree of
+                Just tree ->
+                    tree == childTree
+
+                Nothing ->
+                    False
+
         arrow =
-            if option.selected == True then
+            if optionSelected then
                 optionArrow idx optionsCount
 
             else
@@ -51,10 +47,10 @@ renderOption optionsCount ( idx, option ) =
     in
     div [ class "option" ]
         [ button
-            [ classList [ ( "button", True ), ( "is-link", option.selected == True ) ]
-            , onClick <| SelectOption option.childNode
+            [ classList [ ( "button", True ), ( "is-link", optionSelected ) ]
+            , onClick <| SelectOption childTree
             ]
-            [ text option.name ]
+            [ text answer ]
         , arrow
         ]
 
@@ -75,3 +71,20 @@ optionArrow optionIdx optionsCount =
     div [ class "arrow" ]
         [ img [ src <| imageUrl imageName "svg" ] []
         ]
+
+
+renderLeaf : Answer -> Html Msg
+renderLeaf answer =
+    div []
+        [ div [ class "leaf" ]
+            [ div [] [ text "The answer is:" ]
+            , img [ src <| imageUrl answer "jpg" ] []
+            , div [ class "has-text-weight-bold answer" ] [ text answer ]
+            ]
+        , button [ class "button is-link reset", onClick Reset ] [ text "Reset!" ]
+        ]
+
+
+imageUrl : String -> String -> String
+imageUrl name extension =
+    "%PUBLIC_URL%/images/" ++ name ++ "." ++ extension

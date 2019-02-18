@@ -1,100 +1,69 @@
 module Tree.Data exposing (fullTree)
 
-import Tree.Model exposing (Node(..), Tree(..))
+import Tree.Model exposing (Option(..), Tree(..))
 
 
-fullTree : Tree Node
+fullTree : Tree
 fullTree =
-    Question
-        (Node "Is it an exotic fruit?"
-            [ { name = "no"
-              , selected = False
-              , childNode =
-                    Question
-                        (Node "Is it citric or stone fruit?"
-                            [ { name = "citric", selected = False, childNode = citricNode }
-                            , { name = "stone fruit", selected = False, childNode = stoneFruitNode }
-                            ]
-                        )
-              }
-            , { name = "yes"
-              , selected = False
-              , childNode =
-                    Question
-                        (Node "Is it a melon?"
-                            [ { name = "yes", selected = False, childNode = melonNode }
-                            , { name = "no", selected = False, childNode = bananaNode }
-                            ]
-                        )
-              }
-            ]
-        )
+    Branch "Is it an exotic fruit?"
+        [ Option "no"
+            (Branch "Is it citric or stone fruit?"
+                [ Option "citric" citricBranch
+                , Option "stone fruit" stoneFruitBranch
+                ]
+            )
+        , Option "yes"
+            (Branch "Is it a melon?"
+                [ Option "yes" melonBranch
+                , Option "no" bananaBranch
+                ]
+            )
+        ]
 
 
-citricNode : Tree Node
-citricNode =
-    Question
-        (Node "Green or orange?"
-            [ { name = "green"
-              , selected = False
-              , childNode =
-                    Question
-                        (Node "Is it big or small?"
-                            [ { name = "big", selected = False, childNode = Answer "grapefruit" }
-                            , { name = "small", selected = False, childNode = Answer "lime" }
-                            ]
-                        )
-              }
-            , { name = "orange"
-              , selected = False
-              , childNode =
-                    Question
-                        (Node "Is it big or small?"
-                            [ { name = "big", selected = False, childNode = Answer "orange" }
-                            , { name = "small", selected = False, childNode = Answer "mandarin" }
-                            ]
-                        )
-              }
-            ]
-        )
+citricBranch : Tree
+citricBranch =
+    Branch "Green or orange?"
+        [ Option "green"
+            (Branch "Big or small?"
+                [ Option "big" (Leaf "grapefruit")
+                , Option "small" (Leaf "lime")
+                ]
+            )
+        , Option "orange"
+            (Branch "Big or small?"
+                [ Option "big" (Leaf "orange")
+                , Option "small" (Leaf "mandarin")
+                ]
+            )
+        ]
 
 
-stoneFruitNode : Tree Node
-stoneFruitNode =
-    Question
-        (Node "Is it dark-coloured?"
-            [ { name = "yes", selected = False, childNode = Answer "plum" }
-            , { name = "no"
-              , selected = False
-              , childNode =
-                    Question
-                        (Node "Is it big or small?"
-                            [ { name = "big", selected = False, childNode = Answer "peach" }
-                            , { name = "small", selected = False, childNode = Answer "apricot" }
-                            ]
-                        )
-              }
-            ]
-        )
+stoneFruitBranch : Tree
+stoneFruitBranch =
+    Branch "Is it dark-coloured?"
+        [ Option "yes" (Leaf "plum")
+        , Option "no"
+            (Branch "Is it big or small?"
+                [ Option "big" (Leaf "peach")
+                , Option "small" (Leaf "plum")
+                ]
+            )
+        ]
 
 
-melonNode : Tree Node
-melonNode =
-    Question
-        (Node
-            "What colour is it?"
-            [ { name = "pink", selected = False, childNode = Answer "watermelon" }
-            , { name = "orange", selected = False, childNode = Answer "rockmelon" }
-            , { name = "green", selected = False, childNode = Answer "honeydew" }
-            ]
-        )
+melonBranch : Tree
+melonBranch =
+    Branch "What colour is it?"
+        [ Option "pink" (Leaf "watermelon")
+        , Option "orange" (Leaf "rockmelon")
+        , Option "green" (Leaf "honeydew")
+        ]
 
 
-bananaNode : Tree Node
-bananaNode =
-    Question
-        (Node "Is it a banana?"
-            [ { name = "yes", selected = False, childNode = Answer "banana" }
-            , { name = "no", selected = False, childNode = Answer "mango" }
-            ]
-        )
+bananaBranch : Tree
+bananaBranch =
+    Branch "Is it a banana?"
+        [ Option "yes" (Leaf "banana")
+        , Option "no" (Leaf "mango")
+        ]

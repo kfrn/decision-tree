@@ -2,10 +2,9 @@ module Update exposing (update)
 
 import Browser.Dom as Dom
 import Messages exposing (Msg(..))
-import Model exposing (Model)
+import Model exposing (Model, init)
 import Task
-import Tree.Data exposing (fullTree)
-import Tree.Model exposing (Node(..), Tree(..), findClosestAncestor, updateChoices)
+import Tree.Model exposing (findClosestAncestor, updateChoices)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -13,6 +12,9 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        Reset ->
+            init
 
         SelectOption currentChoice ->
             case findClosestAncestor currentChoice model of
@@ -22,10 +24,7 @@ update msg model =
                     )
 
                 Nothing ->
-                    ( [ fullTree ], Cmd.none )
-
-        Reset ->
-            ( [ fullTree ], Cmd.none )
+                    init
 
 
 jumpToBottom : String -> Cmd Msg
