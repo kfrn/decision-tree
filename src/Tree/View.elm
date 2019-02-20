@@ -7,36 +7,34 @@ import Messages exposing (Msg(..))
 import Tree.Model exposing (Answer, Option(..), Question, Tree(..))
 
 
-renderTree : Tree -> Maybe Tree -> Html Msg
-renderTree tree mChildTree =
+renderTree : Tree -> Html Msg
+renderTree tree =
     case tree of
         Branch question options ->
-            renderBranch question options mChildTree
+            renderBranch question options
 
         Leaf answer ->
             renderLeaf answer
 
 
-renderBranch : Question -> List Option -> Maybe Tree -> Html Msg
-renderBranch question options mChildTree =
+renderBranch : Question -> List Option -> Html Msg
+renderBranch question options =
     div
         [ class "branch" ]
         [ div [ class "question" ] [ text question ]
         , div [ class "options" ]
-            (List.map (renderOption (List.length options) mChildTree) (List.indexedMap Tuple.pair options))
+            (List.map
+                (renderOption <| List.length options)
+                (List.indexedMap Tuple.pair options)
+            )
         ]
 
 
-renderOption : Int -> Maybe Tree -> ( Int, Option ) -> Html Msg
-renderOption optionsCount mChildTree ( idx, Option answer childTree ) =
+renderOption : Int -> ( Int, Option ) -> Html Msg
+renderOption optionsCount ( idx, Option answer childTree ) =
     let
         optionSelected =
-            case mChildTree of
-                Just tree ->
-                    tree == childTree
-
-                Nothing ->
-                    False
+            False
 
         arrow =
             if optionSelected then

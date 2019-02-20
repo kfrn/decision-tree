@@ -4,7 +4,7 @@ import Browser.Dom as Dom
 import Messages exposing (Msg(..))
 import Model exposing (Model, init)
 import Task
-import Tree.Model exposing (findClosestAncestor, updateChoices)
+import Tree.Model exposing (updateZipper)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -17,14 +17,7 @@ update msg model =
             init
 
         SelectOption currentChoice ->
-            case findClosestAncestor currentChoice model of
-                Just ancestor ->
-                    ( updateChoices currentChoice ancestor model
-                    , jumpToBottom "tree"
-                    )
-
-                Nothing ->
-                    init
+            ( updateZipper currentChoice model, Cmd.none )
 
 
 jumpToBottom : String -> Cmd Msg

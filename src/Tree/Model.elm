@@ -1,4 +1,4 @@
-module Tree.Model exposing (Answer, Option(..), Question, Tree(..), findClosestAncestor, updateChoices)
+module Tree.Model exposing (Answer, Option(..), Question, Tree(..), Zipper, updateZipper)
 
 import List.Extra as ListX
 
@@ -24,37 +24,52 @@ type alias Answer =
     String
 
 
-findClosestAncestor : Tree -> List Tree -> Maybe Tree
-findClosestAncestor currentChoice previousChoices =
-    ListX.find (\tree -> isChildOf currentChoice tree) (List.reverse previousChoices)
+type alias Zipper =
+    { focus : Tree
+    , breadcrumbs : List Breadcrumb
+    , leftSiblings : List Option
+    , rightSiblings : List Option
+    }
 
 
-isChildOf : Tree -> Tree -> Bool
-isChildOf currentChoice previousChoice =
-    case previousChoice of
-        Branch _ previousOptions ->
-            List.any
-                (\(Option _ tree) -> treeText tree == treeText currentChoice)
-                previousOptions
-
-        Leaf _ ->
-            False
+type alias Breadcrumb =
+    { question : Question
+    , leftSiblings : List Option
+    , rightSiblings : List Option
+    }
 
 
-treeText : Tree -> String
-treeText tree =
-    case tree of
-        Leaf answerText ->
-            answerText
-
-        Branch questionText _ ->
-            questionText
-
-
-updateChoices : Tree -> Tree -> List Tree -> List Tree
-updateChoices currentChoice parentChoice existingChoices =
+updateZipper : Tree -> Zipper -> Zipper
+updateZipper currentChoice zipper =
     let
-        listHead =
-            ListX.takeWhile (\c -> c /= parentChoice) existingChoices
+        ( leftSiblings, question, rightSiblings ) =
+            case zipper.focus of
+                Branch questionText options ->
+                    ( takeUntil options currentChoice, questionText, takeAfter options currentChoice )
+
+                _ ->
+                    ( [], "", [] )
+
+        crumb =
+            { question = question
+            , leftSiblings = zipper.leftSiblings
+            , rightSiblings = zipper.rightSiblings
+            }
     in
-    listHead ++ [ parentChoice, currentChoice ]
+    { zipper
+        | focus = currentChoice
+        , leftSiblings = leftSiblings
+        , rightSiblings = rightSiblings
+        , breadcrumbs = crumb :: zipper.breadcrumbs
+    }
+
+
+takeUntil : List Option -> Tree -> List Option
+takeUntil options tree =
+    ListX.takeWhile (\(Option _ t) -> t /= tree) options
+
+
+takeAfter : List Option -> Tree -> List Option
+takeAfter options tree =
+    takeUntil (List.reverse options) tree
+        |> List.reverse

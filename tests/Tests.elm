@@ -1,69 +1,65 @@
 module Tests exposing (all)
 
 import Expect
-import Messages exposing (Msg(..))
 import Test exposing (..)
-import Tree.Model exposing (Option(..), Tree(..), findClosestAncestor)
-import Update exposing (update)
+import Tree.Model exposing (Option(..), Tree(..), updateZipper)
 
 
 all : Test
 all =
     describe "Decision Tree" <|
         let
-            childTree =
-                Leaf "child answer"
+            grandChildTree1 =
+                Leaf "first grandchild final answer"
+
+            grandChildTree2 =
+                Leaf "second grandchild final answer"
+
+            childTree1 =
+                Branch "first child question"
+                    [ Option "first child answer" grandChildTree1 ]
+
+            childTree2 =
+                Branch "second child question"
+                    [ Option "second child answer" grandChildTree2 ]
+
+            parentOption1 =
+                Option "parent first answer" childTree1
+
+            parentOption2 =
+                Option "parent second answer" childTree2
 
             parentTree =
-                Branch "parent question text"
-                    [ Option "parent answer" childTree ]
-
-            grandparentTree =
-                Branch "grandparent question text"
-                    [ Option "grandparent answer" parentTree ]
+                Branch "parent question" [ parentOption1, parentOption2 ]
         in
-        [ describe "findClosestAncestor" <|
-            [ describe "when searching for the ancestor of the child tree" <|
-                [ test "it returns the parent" <|
-                    \_ -> Expect.equal (Just parentTree) (findClosestAncestor childTree [ parentTree ])
-                ]
-            , describe "when searching for the ancestor of the parent tree" <|
-                [ test "it returns the grandparent tree" <|
-                    \_ -> Expect.equal (Just grandparentTree) (findClosestAncestor parentTree [ grandparentTree, parentTree ])
-                ]
-            , describe "when searching for the ancestor of the grandparent tree" <|
-                [ test "it returns Nothing" <|
-                    \_ -> Expect.equal Nothing (findClosestAncestor grandparentTree [ grandparentTree, parentTree ])
-                ]
-            ]
-        , describe "SelectOption" <|
-            [ describe "when choosing a direct child of the most recent choice" <|
-                [ test "the child tree is stored as a choice" <|
+        [ describe "updateZipper" <|
+            [ describe "at the parent tree, choose the first child tree" <|
+                let
+                    zipper =
+                        { focus = parentTree
+                        , breadcrumbs = []
+                        , leftSiblings = []
+                        , rightSiblings = []
+                        }
+
+                    newZipper =
+                        updateZipper childTree1 zipper
+                in
+                [ test "it focuses the first child tree" <|
+                    \_ -> Expect.equal newZipper.focus childTree1
+                , test "nothing is added to the leftSiblings field" <|
+                    \_ -> Expect.equal newZipper.leftSiblings []
+                , test "it adds the second Option to the rightSiblings field" <|
+                    \_ -> Expect.equal newZipper.rightSiblings [ parentOption2 ]
+                , test "it adds a breadcrumb with the parent tree information to the breadcrumbs field" <|
                     let
-                        initialModel =
-                            [ parentTree ]
-
-                        expectedModel =
-                            [ parentTree, childTree ]
-
-                        ( actualModel, _ ) =
-                            update (SelectOption childTree) initialModel
+                        crumb =
+                            { question = "parent question"
+                            , leftSiblings = []
+                            , rightSiblings = []
+                            }
                     in
-                    \_ -> Expect.equalLists expectedModel actualModel
-                ]
-            , describe "when choosing an ancestor node of the most recent choice" <|
-                [ test "the tree is 'reset' to the current choice" <|
-                    let
-                        initialModel =
-                            [ grandparentTree, parentTree, childTree ]
-
-                        expectedModel =
-                            [ grandparentTree, parentTree ]
-
-                        ( actualModel, _ ) =
-                            update (SelectOption parentTree) initialModel
-                    in
-                    \_ -> Expect.equalLists expectedModel actualModel
+                    \_ -> Expect.equal newZipper.breadcrumbs [ crumb ]
                 ]
             ]
         ]
