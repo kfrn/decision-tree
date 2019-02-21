@@ -11,10 +11,8 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { focus = fullTree
+    ( { focus = { answer = "start the quiz", tree = fullTree }
       , breadcrumbs = []
-      , leftSiblings = []
-      , rightSiblings = []
       }
     , Cmd.none
     )

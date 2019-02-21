@@ -1,4 +1,4 @@
-module Tree.Model exposing (Answer, Option(..), Question, Tree(..), Zipper, updateZipper)
+module Tree.Model exposing (Answer, Breadcrumb, Option, Question, Tree(..), Zipper, focusChildOption)
 
 import List.Extra as ListX
 
@@ -8,8 +8,10 @@ type Tree
     | Branch Question (List Option)
 
 
-type Option
-    = Option Answer Tree
+type alias Option =
+    { answer : Answer
+    , tree : Tree
+    }
 
 
 type alias FinalAnswer =
@@ -25,48 +27,54 @@ type alias Answer =
 
 
 type alias Zipper =
-    { focus : Tree
+    { focus : Option
     , breadcrumbs : List Breadcrumb
-    , leftSiblings : List Option
-    , rightSiblings : List Option
     }
 
 
 type alias Breadcrumb =
-    { question : Question
+    { previousChoice : ( Question, Answer )
     , leftSiblings : List Option
     , rightSiblings : List Option
     }
 
 
-updateZipper : Tree -> Zipper -> Zipper
-updateZipper currentChoice zipper =
+focusChildOption : Option -> Zipper -> Zipper
+focusChildOption currentChoice zipper =
     let
-        ( leftSiblings, question, rightSiblings ) =
-            case zipper.focus of
-                Branch questionText options ->
-                    ( takeUntil options currentChoice, questionText, takeAfter options currentChoice )
+        ( leftSiblings, rightSiblings ) =
+            case zipper.focus.tree of
+                Branch _ options ->
+                    ( takeUntil options currentChoice.tree, takeAfter options currentChoice.tree )
 
                 _ ->
-                    ( [], "", [] )
+                    ( [], [] )
 
         crumb =
-            { question = question
-            , leftSiblings = zipper.leftSiblings
-            , rightSiblings = zipper.rightSiblings
+            { previousChoice = ( treeText zipper.focus.tree, currentChoice.answer )
+            , leftSiblings = leftSiblings
+            , rightSiblings = rightSiblings
             }
     in
     { zipper
         | focus = currentChoice
-        , leftSiblings = leftSiblings
-        , rightSiblings = rightSiblings
         , breadcrumbs = crumb :: zipper.breadcrumbs
     }
 
 
+treeText : Tree -> String
+treeText tree =
+    case tree of
+        Branch question _ ->
+            question
+
+        Leaf answer ->
+            answer
+
+
 takeUntil : List Option -> Tree -> List Option
 takeUntil options tree =
-    ListX.takeWhile (\(Option _ t) -> t /= tree) options
+    ListX.takeWhile (\opt -> opt.tree /= tree) options
 
 
 takeAfter : List Option -> Tree -> List Option

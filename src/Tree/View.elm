@@ -1,15 +1,15 @@
-module Tree.View exposing (renderTree)
+module Tree.View exposing (renderZipper)
 
 import Html exposing (Html, button, div, img, text)
 import Html.Attributes exposing (class, classList, src)
 import Html.Events exposing (onClick)
 import Messages exposing (Msg(..))
-import Tree.Model exposing (Answer, Option(..), Question, Tree(..))
+import Tree.Model exposing (Answer, Option, Question, Tree(..), Zipper)
 
 
-renderTree : Tree -> Html Msg
-renderTree tree =
-    case tree of
+renderZipper : Zipper -> Html Msg
+renderZipper zipper =
+    case zipper.focus.tree of
         Branch question options ->
             renderBranch question options
 
@@ -31,7 +31,7 @@ renderBranch question options =
 
 
 renderOption : Int -> ( Int, Option ) -> Html Msg
-renderOption optionsCount ( idx, Option answer childTree ) =
+renderOption optionsCount ( idx, option ) =
     let
         optionSelected =
             False
@@ -46,9 +46,9 @@ renderOption optionsCount ( idx, Option answer childTree ) =
     div [ class "option" ]
         [ button
             [ classList [ ( "button", True ), ( "is-link", optionSelected ) ]
-            , onClick <| SelectOption childTree
+            , onClick <| FocusChildOption option
             ]
-            [ text answer ]
+            [ text option.answer ]
         , arrow
         ]
 
