@@ -1,15 +1,86 @@
 module Tree.View exposing (renderZipper)
 
 import Html exposing (Html, button, div, img, text)
-import Html.Attributes exposing (class, classList, src)
+import Html.Attributes exposing (class, id, src)
 import Html.Events exposing (onClick)
 import Messages exposing (Msg(..))
-import Tree.Model exposing (Answer, Option, Question, Tree(..), Zipper)
+import Tree.Model exposing (Answer, Breadcrumb, Option, Question, Tree(..), Zipper)
 
 
 renderZipper : Zipper -> Html Msg
 renderZipper zipper =
-    case zipper.focus.tree of
+    div [ id "zipper" ]
+        [ div [ class "breadcrumbs" ] (List.map renderBreadcrumb <| List.reverse zipper.breadcrumbs)
+        , div [ class "focus" ] [ renderTree zipper.focus.tree ]
+        ]
+
+
+renderBreadcrumb : Breadcrumb -> Html Msg
+renderBreadcrumb crumb =
+    let
+        ( question, answer ) =
+            crumb.previousChoice
+    in
+    div [ class "crumb" ]
+        [ renderQuestion question
+        , renderOptions crumb answer
+        ]
+
+
+renderQuestion : Question -> Html Msg
+renderQuestion question =
+    div [ class "question" ] [ text question ]
+
+
+renderOptions : Breadcrumb -> Answer -> Html Msg
+renderOptions crumb answer =
+    let
+        chosenOption =
+            div [ class "choice" ]
+                [ button [ class "button is-primary option" ] [ text answer ]
+                , arrow crumb
+                ]
+    in
+    div [ class "options" ]
+        (List.map (renderOption FocusAncestorOption) crumb.leftSiblings
+            ++ chosenOption
+            :: List.map (renderOption FocusAncestorOption) crumb.rightSiblings
+        )
+
+
+arrow : Breadcrumb -> Html Msg
+arrow crumb =
+    let
+        leftOptionCount =
+            List.length crumb.leftSiblings
+
+        rightOptionCount =
+            List.length crumb.rightSiblings
+
+        arrowImage =
+            if leftOptionCount == 0 then
+                "arrow_left-down"
+
+            else if rightOptionCount == 0 then
+                "arrow_right-down"
+
+            else
+                "arrow_down"
+    in
+    div [ class "arrow" ]
+        [ img [ src <| imageUrl arrowImage "svg" ] [] ]
+
+
+renderOption : (Option -> Msg) -> Option -> Html Msg
+renderOption msg option =
+    button
+        [ class "button option", onClick <| msg option ]
+        [ text option.answer ]
+
+
+renderTree : Tree -> Html Msg
+renderTree tree =
+    case tree of
         Branch question options ->
             renderBranch question options
 
@@ -19,55 +90,9 @@ renderZipper zipper =
 
 renderBranch : Question -> List Option -> Html Msg
 renderBranch question options =
-    div
-        [ class "branch" ]
-        [ div [ class "question" ] [ text question ]
-        , div [ class "options" ]
-            (List.map
-                (renderOption <| List.length options)
-                (List.indexedMap Tuple.pair options)
-            )
-        ]
-
-
-renderOption : Int -> ( Int, Option ) -> Html Msg
-renderOption optionsCount ( idx, option ) =
-    let
-        optionSelected =
-            False
-
-        arrow =
-            if optionSelected then
-                optionArrow idx optionsCount
-
-            else
-                div [] []
-    in
-    div [ class "option" ]
-        [ button
-            [ classList [ ( "button", True ), ( "is-link", optionSelected ) ]
-            , onClick <| FocusChildOption option
-            ]
-            [ text option.answer ]
-        , arrow
-        ]
-
-
-optionArrow : Int -> Int -> Html Msg
-optionArrow optionIdx optionsCount =
-    let
-        imageName =
-            if optionIdx == 0 then
-                "arrow_left-down"
-
-            else if optionsCount == (optionIdx + 1) then
-                "arrow_right-down"
-
-            else
-                "arrow_down"
-    in
-    div [ class "arrow" ]
-        [ img [ src <| imageUrl imageName "svg" ] []
+    div [ class "branch" ]
+        [ renderQuestion question
+        , div [ class "options" ] (List.map (renderOption FocusChildOption) options)
         ]
 
 

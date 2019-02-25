@@ -37,39 +37,28 @@ h1 {
 #tree {
   margin: 1.5rem 0;
 
-  .branch {
-    &:not(:first-of-type) {
-      -webkit-animation: fadein 0.8s; /* Safari, Chrome and Opera > 12.1 */
-      -moz-animation: fadein 0.8s; /* Firefox < 16 */
-      -ms-animation: fadein 0.8s; /* Internet Explorer */
-      -o-animation: fadein 0.8s; /* Opera < 12.1 */
-      animation: fadein 0.8s;
+  .crumb {
+    margin-bottom: 0.75rem;
+  }
+
+  .question {
+    font-size: 1.25rem;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
+    .option {
+      margin: 0.5rem 1rem;
     }
 
-    .question {
-      font-size: 1.25rem;
-    }
+    .arrow {
+      margin: 0.5rem;
 
-    .options {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-
-      .option {
-        margin: 0.5rem 1rem;
-
-        .arrow {
-          -webkit-animation: fadein 0.5s; /* Safari, Chrome and Opera > 12.1 */
-          -moz-animation: fadein 0.5s; /* Firefox < 16 */
-          -ms-animation: fadein 0.5s; /* Internet Explorer */
-          -o-animation: fadein 0.5s; /* Opera < 12.1 */
-          animation: fadein 0.5s;
-
-          img {
-            margin-top: 0.75rem;
-            height: 2.5rem;
-          }
-        }
+      img {
+        height: 2.5rem;
       }
     }
   }

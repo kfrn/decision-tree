@@ -7,3 +7,4 @@ type Msg
     = NoOp
     | Reset
     | FocusChildOption Option
+    | FocusAncestorOption Option

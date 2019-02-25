@@ -16,8 +16,12 @@ update msg model =
         Reset ->
             init
 
-        FocusChildOption currentChoice ->
-            ( focusChildOption currentChoice model, jumpToBottom "tree" )
+        FocusChildOption choice ->
+            ( focusChildOption choice model, jumpToBottom "tree" )
+
+        FocusAncestorOption choice ->
+            -- TODO!
+            ( model, Cmd.none )
 
 
 jumpToBottom : String -> Cmd Msg
