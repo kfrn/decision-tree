@@ -17,13 +17,9 @@ renderZipper zipper =
 
 renderBreadcrumb : Breadcrumb -> Html Msg
 renderBreadcrumb crumb =
-    let
-        ( question, answer ) =
-            crumb.previousChoice
-    in
     div [ class "crumb" ]
-        [ renderQuestion question
-        , renderOptions crumb answer
+        [ renderQuestion crumb.question
+        , renderOptions crumb crumb.answer
         ]
 
 
@@ -42,9 +38,9 @@ renderOptions crumb answer =
                 ]
     in
     div [ class "options" ]
-        (List.map (renderOption FocusAncestorOption) crumb.leftSiblings
+        (List.map (renderOption FocusNonChildOption) crumb.leftOptions
             ++ chosenOption
-            :: List.map (renderOption FocusAncestorOption) crumb.rightSiblings
+            :: List.map (renderOption FocusNonChildOption) crumb.rightOptions
         )
 
 
@@ -52,10 +48,10 @@ arrow : Breadcrumb -> Html Msg
 arrow crumb =
     let
         leftOptionCount =
-            List.length crumb.leftSiblings
+            List.length crumb.leftOptions
 
         rightOptionCount =
-            List.length crumb.rightSiblings
+            List.length crumb.rightOptions
 
         arrowImage =
             if leftOptionCount == 0 then

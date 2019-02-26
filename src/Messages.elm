@@ -4,7 +4,7 @@ import Tree.Model exposing (Option)
 
 
 type Msg
-    = NoOp
+    = FocusChildOption Option
+    | FocusNonChildOption Option
+    | NoOp
     | Reset
-    | FocusChildOption Option
-    | FocusAncestorOption Option

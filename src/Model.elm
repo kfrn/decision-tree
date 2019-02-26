@@ -11,7 +11,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { focus = { answer = "start the quiz", tree = fullTree }
+    ( { focus = { answer = "start", tree = fullTree }
       , breadcrumbs = []
       }
     , Cmd.none

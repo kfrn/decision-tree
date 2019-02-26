@@ -4,24 +4,23 @@ import Browser.Dom as Dom
 import Messages exposing (Msg(..))
 import Model exposing (Model, init)
 import Task
-import Tree.Model exposing (focusChildOption)
+import Tree.Model exposing (focusNonChildOption, focusChildOption)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        FocusChildOption choice ->
+            ( focusChildOption choice model, jumpToBottom "tree" )
+
+        FocusNonChildOption choice ->
+            ( focusNonChildOption choice model, jumpToBottom "tree" )
+
         NoOp ->
             ( model, Cmd.none )
 
         Reset ->
             init
-
-        FocusChildOption choice ->
-            ( focusChildOption choice model, jumpToBottom "tree" )
-
-        FocusAncestorOption choice ->
-            -- TODO!
-            ( model, Cmd.none )
 
 
 jumpToBottom : String -> Cmd Msg
