@@ -1,4 +1,4 @@
-module Tree.Model exposing (Answer, Breadcrumb, Option, Question, Tree(..), Zipper, focusChildOption, focusNonChildOption, rebuildParent)
+module Tree.Model exposing (Answer, Breadcrumb, Option, Question, Tree(..), Zipper, focusChildOption, focusNonChildOption, reconstruct)
 
 import List.Extra as ListX
 
@@ -46,7 +46,9 @@ focusChildOption choice zipper =
         ( leftOptions, rightOptions ) =
             case zipper.focus.tree of
                 Branch _ options ->
-                    ( takeUntil options choice.tree, takeAfter options choice.tree )
+                    ( ListX.takeWhile (\opt -> opt.tree /= choice.tree) options
+                    , ListX.takeWhileRight (\opt -> opt.tree /= choice.tree) options
+                    )
 
                 _ ->
                     ( [], [] )
@@ -71,73 +73,40 @@ treeText tree =
             answer
 
 
-takeUntil : List Option -> Tree -> List Option
-takeUntil options tree =
-    ListX.takeWhile (\opt -> opt.tree /= tree) options
-
-
-takeAfter : List Option -> Tree -> List Option
-takeAfter options tree =
-    ListX.takeWhileRight (\opt -> opt.tree /= tree) options
-
-
 focusNonChildOption : Option -> Zipper -> Zipper
 focusNonChildOption choice zipper =
     let
-        ancestorBreadcrumbs =
-            ListX.takeWhileRight (\crumb -> not <| optionInBreadcrumb choice crumb) zipper.breadcrumbs
+        newCrumbs =
+            case partitionBreadcrumbs choice zipper.breadcrumbs of
+                ( crumbsToCollapse, Just crumbToRebuild, ancestorBreadcrumbs ) ->
+                    let
+                        newFocus =
+                            List.foldl reconstruct zipper.focus crumbsToCollapse
+                    in
+                    buildBreadcrumb newFocus choice crumbToRebuild :: ancestorBreadcrumbs
 
-        breadcrumbstoCollapse =
-            ListX.filterNot (\crumb -> List.member crumb ancestorBreadcrumbs) zipper.breadcrumbs
-
-        newBreadcrumbs =
-            case collapseBreadcrumbs breadcrumbstoCollapse zipper.focus choice of
-                Just crumb ->
-                    crumb :: ancestorBreadcrumbs
-
-                Nothing ->
+                _ ->
                     []
     in
-    { zipper | focus = choice, breadcrumbs = newBreadcrumbs }
+    { zipper | focus = choice, breadcrumbs = newCrumbs }
 
 
-optionInBreadcrumb : Option -> Breadcrumb -> Bool
-optionInBreadcrumb option crumb =
-    List.member option (crumb.leftOptions ++ crumb.rightOptions)
-
-
-collapseBreadcrumbs : List Breadcrumb -> Option -> Option -> Maybe Breadcrumb
-collapseBreadcrumbs breadcrumbs previousFocus choice =
+partitionBreadcrumbs : Option -> List Breadcrumb -> ( List Breadcrumb, Maybe Breadcrumb, List Breadcrumb )
+partitionBreadcrumbs choice breadcrumbs =
     let
-        ( butLast, last ) =
-            ( ListX.init breadcrumbs, ListX.last breadcrumbs )
+        inBreadcrumb crumb =
+            List.member choice (crumb.leftOptions ++ crumb.rightOptions)
     in
-    case ( butLast, last ) of
-        ( Just [], Just crumb ) ->
-            Just <| buildBreadcrumb previousFocus choice crumb
-
-        ( Just crumbs, Just crumb ) ->
-            let
-                newFocus =
-                    List.foldl rebuildParent previousFocus crumbs
-            in
-            Just <| buildBreadcrumb newFocus choice crumb
-
-        _ ->
-            Nothing
+    ( ListX.takeWhile (\crumb -> not <| inBreadcrumb crumb) breadcrumbs
+    , ListX.find (\crumb -> inBreadcrumb crumb) breadcrumbs
+    , ListX.takeWhileRight (\crumb -> not <| inBreadcrumb crumb) breadcrumbs
+    )
 
 
-rebuildParent : Breadcrumb -> Option -> Option
-rebuildParent crumb currentFocus =
-    let
-        options =
-            crumb.leftOptions ++ currentFocus :: crumb.rightOptions
-
-        tree =
-            Branch crumb.question options
-    in
+reconstruct : Breadcrumb -> Option -> Option
+reconstruct crumb currentFocus =
     { answer = crumb.answer
-    , tree = tree
+    , tree = Branch crumb.question (crumb.leftOptions ++ currentFocus :: crumb.rightOptions)
     }
 
 

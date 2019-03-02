@@ -3,7 +3,7 @@ module Tests exposing (all)
 import Expect
 import List.Extra as ListX
 import Test exposing (..)
-import Tree.Model exposing (Option, Tree(..), focusChildOption, focusNonChildOption, rebuildParent)
+import Tree.Model exposing (Option, Tree(..), focusChildOption, focusNonChildOption, reconstruct)
 
 
 all : Test
@@ -146,7 +146,7 @@ all =
                     \_ -> Expect.equal newZipper.breadcrumbs newBreadcrumbs
                 ]
             ]
-        , describe "rebuildParent" <|
+        , describe "reconstruct" <|
             [ describe "given a current focus and the breadcrumb of its parent context" <|
                 let
                     breadcrumb =
@@ -157,7 +157,7 @@ all =
                         }
                 in
                 [ test "it rebuilds that parent option" <|
-                    \_ -> Expect.equal (rebuildParent breadcrumb flaxOption) nativeOption
+                    \_ -> Expect.equal (reconstruct breadcrumb flaxOption) nativeOption
                 ]
             ]
         ]
