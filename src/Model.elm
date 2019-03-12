@@ -2,15 +2,17 @@ module Model exposing (Model, init)
 
 import Messages exposing (Msg)
 import Tree.Data exposing (fullTree)
-import Tree.Model exposing (Tree)
+import Tree.Model exposing (Zipper)
 
 
 type alias Model =
-    List Tree
+    Zipper
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( [ fullTree ]
+    ( { focus = { answer = "start", tree = fullTree }
+      , breadcrumbs = []
+      }
     , Cmd.none
     )

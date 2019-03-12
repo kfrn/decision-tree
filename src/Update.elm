@@ -4,27 +4,23 @@ import Browser.Dom as Dom
 import Messages exposing (Msg(..))
 import Model exposing (Model, init)
 import Task
-import Tree.Model exposing (findClosestAncestor, updateChoices)
+import Tree.Model exposing (focusNonChildOption, focusChildOption)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        FocusChildOption choice ->
+            ( focusChildOption choice model, jumpToBottom "tree" )
+
+        FocusNonChildOption choice ->
+            ( focusNonChildOption choice model, jumpToBottom "tree" )
+
         NoOp ->
             ( model, Cmd.none )
 
         Reset ->
             init
-
-        SelectOption currentChoice ->
-            case findClosestAncestor currentChoice model of
-                Just ancestor ->
-                    ( updateChoices currentChoice ancestor model
-                    , jumpToBottom "tree"
-                    )
-
-                Nothing ->
-                    init
 
 
 jumpToBottom : String -> Cmd Msg

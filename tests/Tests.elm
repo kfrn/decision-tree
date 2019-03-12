@@ -1,69 +1,163 @@
 module Tests exposing (all)
 
 import Expect
-import Messages exposing (Msg(..))
+import List.Extra as ListX
 import Test exposing (..)
-import Tree.Model exposing (Option(..), Tree(..), findClosestAncestor)
-import Update exposing (update)
+import Tree.Model exposing (Option, Tree(..), focusChildOption, focusNonChildOption, reconstruct)
 
 
 all : Test
 all =
     describe "Decision Tree" <|
         let
-            childTree =
-                Leaf "child answer"
+            startOption =
+                { answer = "start"
+                , tree = tree
+                }
 
-            parentTree =
-                Branch "parent question text"
-                    [ Option "parent answer" childTree ]
+            tree =
+                Branch "is it native or foreign?" [ nativeOption, foreignOption ]
 
-            grandparentTree =
-                Branch "grandparent question text"
-                    [ Option "grandparent answer" parentTree ]
+            nativeOption =
+                { answer = "native"
+                , tree =
+                    Branch "do tuis like it?" [ kowhaiOption, rimuOption, flaxOption ]
+                }
+
+            foreignOption =
+                { answer = "foreign"
+                , tree =
+                    Branch "Does it have fruit?"
+                        [ { answer = "yes", tree = Leaf "apple tree" }
+                        , { answer = "no", tree = Leaf "oak tree" }
+                        ]
+                }
+
+            kowhaiOption =
+                { answer = "yes", tree = Leaf "kowhai" }
+
+            rimuOption =
+                { answer = "no", tree = Leaf "rimu" }
+
+            flaxOption =
+                { answer = "maybe", tree = Leaf "flax" }
+
+            initialZipper =
+                { focus = startOption
+                , breadcrumbs = []
+                }
         in
-        [ describe "findClosestAncestor" <|
-            [ describe "when searching for the ancestor of the child tree" <|
-                [ test "it returns the parent" <|
-                    \_ -> Expect.equal (Just parentTree) (findClosestAncestor childTree [ parentTree ])
+        [ describe "focusChildOption" <|
+            [ describe "Top-level choice" <|
+                [ describe "Ts it native or foreign? -> native" <|
+                    let
+                        newZipper =
+                            focusChildOption nativeOption initialZipper
+                    in
+                    [ test "it focuses the native tree option" <|
+                        \_ -> Expect.equal newZipper.focus nativeOption
+                    , test "it adds a breadcrumb with the question, and the foreignOption added to the rightOptions field" <|
+                        let
+                            crumb =
+                                { answer = "start"
+                                , question = "is it native or foreign?"
+                                , leftOptions = []
+                                , rightOptions = [ foreignOption ]
+                                }
+                        in
+                        \_ -> Expect.equal newZipper.breadcrumbs [ crumb ]
+                    ]
                 ]
-            , describe "when searching for the ancestor of the parent tree" <|
-                [ test "it returns the grandparent tree" <|
-                    \_ -> Expect.equal (Just grandparentTree) (findClosestAncestor parentTree [ grandparentTree, parentTree ])
-                ]
-            , describe "when searching for the ancestor of the grandparent tree" <|
-                [ test "it returns Nothing" <|
-                    \_ -> Expect.equal Nothing (findClosestAncestor grandparentTree [ grandparentTree, parentTree ])
+            , describe "Second-level choice" <|
+                [ describe "Native tree. Do tuis like it? -> no" <|
+                    let
+                        newZipper =
+                            focusChildOption nativeOption initialZipper
+                                |> focusChildOption rimuOption
+                    in
+                    [ test "it focuses the first grandchild tree" <|
+                        \_ -> Expect.equal newZipper.focus rimuOption
+                    , test "it adds a breadcrumb to the breadcrumbs field" <|
+                        \_ -> Expect.equal (List.length newZipper.breadcrumbs) 2
+                    , test "the new breadcrumb includes the question, and the sibling options of the choice" <|
+                        let
+                            crumb =
+                                { answer = "native"
+                                , question = "do tuis like it?"
+                                , leftOptions = [ kowhaiOption ]
+                                , rightOptions = [ flaxOption ]
+                                }
+                        in
+                        \_ -> Expect.equal (List.head newZipper.breadcrumbs) (Just crumb)
+                    ]
                 ]
             ]
-        , describe "SelectOption" <|
-            [ describe "when choosing a direct child of the most recent choice" <|
-                [ test "the child tree is stored as a choice" <|
+        , describe "focusNonChildOption" <|
+            let
+                currentZipper =
+                    focusChildOption nativeOption initialZipper
+                        |> focusChildOption rimuOption
+            in
+            [ describe "focusing a sibling of the current focus" <|
+                let
+                    newZipper =
+                        focusNonChildOption flaxOption currentZipper
+                in
+                [ test "it focuses that option" <|
+                    \_ -> Expect.equal newZipper.focus flaxOption
+                , test "the number of breadcrumbs is the same" <|
+                    \_ -> Expect.equal (List.length newZipper.breadcrumbs) (List.length currentZipper.breadcrumbs)
+                , test "the breadcrumbs are updated to reflect the new focus" <|
                     let
-                        initialModel =
-                            [ parentTree ]
-
-                        expectedModel =
-                            [ parentTree, childTree ]
-
-                        ( actualModel, _ ) =
-                            update (SelectOption childTree) initialModel
+                        newBreadcrumbs =
+                            [ { answer = "native"
+                              , question = "do tuis like it?"
+                              , leftOptions = [ kowhaiOption, rimuOption ]
+                              , rightOptions = []
+                              }
+                            , { answer = "start"
+                              , question = "is it native or foreign?"
+                              , leftOptions = []
+                              , rightOptions = [ foreignOption ]
+                              }
+                            ]
                     in
-                    \_ -> Expect.equalLists expectedModel actualModel
+                    \_ -> Expect.equal newZipper.breadcrumbs newBreadcrumbs
                 ]
-            , describe "when choosing an ancestor node of the most recent choice" <|
-                [ test "the tree is 'reset' to the current choice" <|
+            , describe "focusing an 'aunt' option of the current focus" <|
+                let
+                    newZipper =
+                        focusNonChildOption foreignOption currentZipper
+                in
+                [ test "it focuses that option" <|
+                    \_ -> Expect.equal newZipper.focus foreignOption
+                , test "the number of breadcrumbs is decreased by one" <|
+                    \_ -> Expect.equal (List.length newZipper.breadcrumbs) (List.length currentZipper.breadcrumbs - 1)
+                , test "the breadcrumbs are updated to reflect the new focus" <|
                     let
-                        initialModel =
-                            [ grandparentTree, parentTree, childTree ]
-
-                        expectedModel =
-                            [ grandparentTree, parentTree ]
-
-                        ( actualModel, _ ) =
-                            update (SelectOption parentTree) initialModel
+                        newBreadcrumbs =
+                            [ { answer = "start"
+                              , question = "is it native or foreign?"
+                              , leftOptions = [ nativeOption ]
+                              , rightOptions = []
+                              }
+                            ]
                     in
-                    \_ -> Expect.equalLists expectedModel actualModel
+                    \_ -> Expect.equal newZipper.breadcrumbs newBreadcrumbs
+                ]
+            ]
+        , describe "reconstruct" <|
+            [ describe "given a current focus and the breadcrumb of its parent context" <|
+                let
+                    breadcrumb =
+                        { answer = "native"
+                        , question = "do tuis like it?"
+                        , leftOptions = [ kowhaiOption, rimuOption ]
+                        , rightOptions = []
+                        }
+                in
+                [ test "it rebuilds that parent option" <|
+                    \_ -> Expect.equal (reconstruct breadcrumb flaxOption) nativeOption
                 ]
             ]
         ]

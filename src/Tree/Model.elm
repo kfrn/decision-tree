@@ -1,4 +1,4 @@
-module Tree.Model exposing (Answer, Option(..), Question, Tree(..), findClosestAncestor, updateChoices)
+module Tree.Model exposing (Answer, Breadcrumb, Option, Question, Tree(..), Zipper, focusChildOption, focusNonChildOption, reconstruct)
 
 import List.Extra as ListX
 
@@ -8,8 +8,10 @@ type Tree
     | Branch Question (List Option)
 
 
-type Option
-    = Option Answer Tree
+type alias Option =
+    { answer : Answer
+    , tree : Tree
+    }
 
 
 type alias FinalAnswer =
@@ -24,37 +26,102 @@ type alias Answer =
     String
 
 
-findClosestAncestor : Tree -> List Tree -> Maybe Tree
-findClosestAncestor currentChoice previousChoices =
-    ListX.find (\tree -> isChildOf currentChoice tree) (List.reverse previousChoices)
+type alias Zipper =
+    { focus : Option
+    , breadcrumbs : List Breadcrumb
+    }
 
 
-isChildOf : Tree -> Tree -> Bool
-isChildOf currentChoice previousChoice =
-    case previousChoice of
-        Branch _ previousOptions ->
-            List.any
-                (\(Option _ tree) -> treeText tree == treeText currentChoice)
-                previousOptions
+type alias Breadcrumb =
+    { answer : Answer
+    , question : Question
+    , leftOptions : List Option
+    , rightOptions : List Option
+    }
 
-        Leaf _ ->
-            False
+
+focusChildOption : Option -> Zipper -> Zipper
+focusChildOption choice zipper =
+    let
+        ( leftOptions, rightOptions ) =
+            case zipper.focus.tree of
+                Branch _ options ->
+                    ( ListX.takeWhile (\opt -> opt.tree /= choice.tree) options
+                    , ListX.takeWhileRight (\opt -> opt.tree /= choice.tree) options
+                    )
+
+                _ ->
+                    ( [], [] )
+
+        crumb =
+            { answer = zipper.focus.answer
+            , question = treeText zipper.focus.tree
+            , leftOptions = leftOptions
+            , rightOptions = rightOptions
+            }
+    in
+    { zipper | focus = choice, breadcrumbs = crumb :: zipper.breadcrumbs }
 
 
 treeText : Tree -> String
 treeText tree =
     case tree of
-        Leaf answerText ->
-            answerText
+        Branch question _ ->
+            question
 
-        Branch questionText _ ->
-            questionText
+        Leaf answer ->
+            answer
 
 
-updateChoices : Tree -> Tree -> List Tree -> List Tree
-updateChoices currentChoice parentChoice existingChoices =
+focusNonChildOption : Option -> Zipper -> Zipper
+focusNonChildOption choice zipper =
     let
-        listHead =
-            ListX.takeWhile (\c -> c /= parentChoice) existingChoices
+        newCrumbs =
+            case partitionBreadcrumbs choice zipper.breadcrumbs of
+                ( crumbsToCollapse, Just crumbToRebuild, ancestorBreadcrumbs ) ->
+                    let
+                        newFocus =
+                            List.foldl reconstruct zipper.focus crumbsToCollapse
+                    in
+                    buildBreadcrumb newFocus choice crumbToRebuild :: ancestorBreadcrumbs
+
+                _ ->
+                    []
     in
-    listHead ++ [ parentChoice, currentChoice ]
+    { zipper | focus = choice, breadcrumbs = newCrumbs }
+
+
+partitionBreadcrumbs : Option -> List Breadcrumb -> ( List Breadcrumb, Maybe Breadcrumb, List Breadcrumb )
+partitionBreadcrumbs choice breadcrumbs =
+    let
+        inBreadcrumb crumb =
+            List.member choice (crumb.leftOptions ++ crumb.rightOptions)
+    in
+    ( ListX.takeWhile (\crumb -> not <| inBreadcrumb crumb) breadcrumbs
+    , ListX.find (\crumb -> inBreadcrumb crumb) breadcrumbs
+    , ListX.takeWhileRight (\crumb -> not <| inBreadcrumb crumb) breadcrumbs
+    )
+
+
+reconstruct : Breadcrumb -> Option -> Option
+reconstruct crumb currentFocus =
+    { answer = crumb.answer
+    , tree = Branch crumb.question (crumb.leftOptions ++ currentFocus :: crumb.rightOptions)
+    }
+
+
+buildBreadcrumb : Option -> Option -> Breadcrumb -> Breadcrumb
+buildBreadcrumb previousFocus choice crumb =
+    let
+        ( leftOptions, rightOptions ) =
+            if List.member choice crumb.leftOptions then
+                ( ListX.remove choice crumb.leftOptions, previousFocus :: crumb.rightOptions )
+
+            else
+                ( crumb.leftOptions ++ [ previousFocus ], ListX.remove choice crumb.rightOptions )
+    in
+    { crumb
+        | leftOptions = leftOptions
+        , rightOptions = rightOptions
+        , question = crumb.question
+    }

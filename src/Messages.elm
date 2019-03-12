@@ -1,9 +1,10 @@
 module Messages exposing (Msg(..))
 
-import Tree.Model exposing (Tree)
+import Tree.Model exposing (Option)
 
 
 type Msg
-    = NoOp
+    = FocusChildOption Option
+    | FocusNonChildOption Option
+    | NoOp
     | Reset
-    | SelectOption Tree
